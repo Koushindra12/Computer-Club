@@ -7,6 +7,7 @@
 import os
 import uuid
 import time
+
 from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
@@ -84,6 +85,8 @@ col_media      = db['media']   # individual media items (multi-upload)
 
 # ── Upload config ──────────────────────────────────────────────────────────────
 UPLOAD_FOLDER = Path(os.environ.get('UPLOAD_FOLDER', 'uploads'))
+
+UPLOAD_FOLDER = Path("/tmp/uploads")
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 for sub in ('events', 'activities', 'winners', 'gallery', 'media'):
     (UPLOAD_FOLDER / sub).mkdir(exist_ok=True)
