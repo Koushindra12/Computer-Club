@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ ev.title }} – SUG Computer Club Web Craft</title>
+  <meta name="description" content="{{ ev.description[:160] }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/responsive.css" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <style>
+    /* ── Event Detail Page Styles ── */
+    .detail-hero{padding:calc(var(--nav-h,72px) + 2.5rem) 0 3rem;background:linear-gradient(135deg,rgba(79,70,229,.18) 0%,rgba(124,58,237,.12) 100%)}
+    .detail-hero-inner{display:grid;grid-template-columns:1fr 420px;gap:3rem;align-items:start}
+    .detail-back{display:inline-flex;align-items:center;gap:.4rem;color:rgba(196,181,253,.65);font-size:.85rem;text-decoration:none;margin-bottom:1.5rem;transition:color .2s}
+    .detail-back:hover{color:#c4b5fd}
+    .ev-badge-row{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem}
+    .ev-status-pill{padding:.3rem .85rem;border-radius:999px;font-size:.75rem;font-weight:700;letter-spacing:.06em}
+    .pill-upcoming{background:rgba(99,102,241,.2);color:#a5b4fc;border:1px solid rgba(99,102,241,.35)}
+    .pill-ongoing{background:rgba(234,179,8,.2);color:#fde047;border:1px solid rgba(234,179,8,.35)}
+    .pill-completed{background:rgba(34,197,94,.2);color:#86efac;border:1px solid rgba(34,197,94,.35)}
+    .pill-cancelled{background:rgba(239,68,68,.2);color:#fca5a5;border:1px solid rgba(239,68,68,.35)}
+    .detail-title{font-size:2.5rem;font-weight:800;line-height:1.2;margin-bottom:.85rem;background:linear-gradient(135deg,#fff 30%,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .detail-desc{font-size:1.05rem;color:rgba(255,255,255,.75);line-height:1.7;margin-bottom:2rem}
+    .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem 1.5rem;margin-bottom:1.5rem}
+    .meta-item{display:flex;align-items:flex-start;gap:.5rem;font-size:.875rem;color:rgba(255,255,255,.7)}
+    .meta-item i{width:16px;height:16px;flex-shrink:0;margin-top:.15rem;color:#a78bfa}
+    .meta-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#6b6b9a;margin-bottom:.1rem}
+    .reg-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.8rem 2rem;border-radius:999px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-weight:700;font-size:.9rem;text-decoration:none;transition:all .2s;box-shadow:0 4px 20px rgba(124,58,237,.35)}
+    .reg-btn:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(124,58,237,.5)}
+    .poster-wrap{border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.4)}
+    .poster-wrap img{width:100%;display:block;object-fit:cover}
+    .detail-section{padding:3rem 0}
+    .detail-section+.detail-section{border-top:1px solid rgba(255,255,255,.06)}
+    .detail-section-title{font-size:1.25rem;font-weight:700;color:#fff;margin-bottom:1.5rem;display:flex;align-items:center;gap:.5rem}
+    .detail-section-title i{width:20px;height:20px;color:#a78bfa}
+    .detail-text{color:rgba(255,255,255,.75);line-height:1.8;white-space:pre-line;font-size:.95rem}
+    .winners-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1.25rem}
+    .w-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:1.25rem;text-align:center;transition:all .25s;cursor:pointer;text-decoration:none;display:block;color:inherit}
+    .w-card:hover{border-color:rgba(124,58,237,.4);transform:translateY(-3px)}
+    .w-avatar{width:72px;height:72px;border-radius:50%;object-fit:cover;margin:0 auto .75rem;display:block;border:3px solid rgba(124,58,237,.35)}
+    .w-avatar-ph{width:72px;height:72px;border-radius:50%;background:rgba(124,58,237,.2);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;color:#c4b5fd;margin:0 auto .75rem}
+    .w-pos{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3rem}
+    .pos-1{color:#fde047}.pos-2{color:#e2e8f0}.pos-3{color:#f97316}.pos-o{color:#a9a9d4}
+    .w-name{font-weight:700;color:#fff;font-size:.95rem}
+    .w-dept{font-size:.78rem;color:#6b6b9a;margin-top:.2rem}
+    .media-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem}
+    .media-thumb{border-radius:10px;overflow:hidden;aspect-ratio:16/10;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
+    .media-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .media-thumb video{width:100%;height:100%;object-fit:cover;display:block}
+    .info-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:1.5rem 1.75rem}
+    @media(max-width:900px){.detail-hero-inner{grid-template-columns:1fr}}
+    @media(max-width:600px){.detail-title{font-size:1.75rem}.meta-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <!-- ── Navbar ── -->
+  <nav class="navbar" id="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container nav-container">
+      <a href="/" class="nav-logo" aria-label="SUG Computer Club Home">
+        <img src="/assets/logo/logo.png" alt="Shobhit University" class="logo-uni-img" width="42" height="42" />
+        <div class="logo-text">
+          <span class="logo-main">SUG Computer Club</span>
+          <span class="logo-sub">Web Craft</span>
+        </div>
+      </a>
+      <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-menu" id="nav-menu" role="menubar">
+        <li role="none"><a href="/index.html" class="nav-link" role="menuitem">Home</a></li>
+        <li role="none"><a href="/about.html" class="nav-link" role="menuitem">About</a></li>
+        <li role="none"><a href="/activities.html" class="nav-link" role="menuitem">Activities</a></li>
+        <li role="none"><a href="/members.html" class="nav-link" role="menuitem">Members</a></li>
+        <li role="none"><a href="/events.html" class="nav-link active" role="menuitem">Events</a></li>
+        <li role="none"><a href="/gallery.html" class="nav-link" role="menuitem">Gallery</a></li>
+        <li role="none"><a href="/contact.html" class="nav-link" role="menuitem">Contact</a></li>
+        <li role="none"><a href="/admin/login" class="nav-link nav-admin-link" role="menuitem" title="Admin Dashboard"><i data-lucide="shield" aria-hidden="true"></i> Admin</a></li>
+      </ul>
+    </div>
+    <div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section class="detail-hero">
+    <div class="container">
+      <a href="/events.html" class="detail-back">
+        <i data-lucide="arrow-left" style="width:16px;height:16px"></i> Back to Events
+      </a>
+      <div class="detail-hero-inner">
+        <div>
+          <!-- Badge + Status -->
+          <div class="ev-badge-row">
+            {% if ev.badge %}
+            <span class="act-tech-badge {{ ev.badge_class or 'proj-badge' }}">{{ ev.badge }}</span>
+            {% endif %}
+            <span class="ev-status-pill pill-{{ ev.status|lower|replace(' ','') }}">{{ ev.status }}</span>
+          </div>
+          <h1 class="detail-title">{{ ev.title }}</h1>
+          <p class="detail-desc">{{ ev.description }}</p>
+
+          <!-- Meta grid -->
+          <div class="meta-grid">
+            <div class="meta-item">
+              <i data-lucide="calendar"></i>
+              <div><div class="meta-label">Date</div>{{ ev.date or 'To Be Announced' }}</div>
+            </div>
+            <div class="meta-item">
+              <i data-lucide="clock"></i>
+              <div><div class="meta-label">Time</div>{{ ev.time or 'To Be Announced' }}</div>
+            </div>
+            {% if ev.venue %}
+            <div class="meta-item">
+              <i data-lucide="map-pin"></i>
+              <div><div class="meta-label">Venue</div>{{ ev.venue }}</div>
+            </div>
+            {% endif %}
+            {% if ev.organizer %}
+            <div class="meta-item">
+              <i data-lucide="user-circle"></i>
+              <div><div class="meta-label">Organizer</div>{{ ev.organizer }}</div>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Registration -->
+          {% if ev.reg_link and ev.reg_link != 'To Be Announced' %}
+          <a href="{{ ev.reg_link }}" target="_blank" rel="noopener" class="reg-btn">
+            <i data-lucide="external-link" style="width:16px;height:16px"></i> Register Now
+          </a>
+          {% else %}
+          <p style="color:#6b6b9a;font-size:.875rem;margin-top:.75rem">
+            <i data-lucide="clock" style="width:14px;height:14px;vertical-align:middle"></i>
+            Registration: To Be Announced
+          </p>
+          {% endif %}
+        </div>
+
+        <!-- Poster -->
+        {% if ev.poster %}
+        <div class="poster-wrap">
+          <img src="{{ ev.poster }}" alt="{{ ev.title }}" loading="lazy" />
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Detail Sections ── -->
+  <div class="container">
+
+    {% if ev.eligibility or ev.requirements %}
+    <div class="detail-section">
+      {% if ev.eligibility %}
+      <h2 class="detail-section-title"><i data-lucide="users"></i> Eligibility</h2>
+      <p class="detail-text">{{ ev.eligibility }}</p>
+      {% endif %}
+      {% if ev.requirements %}
+      <h2 class="detail-section-title" style="margin-top:1.5rem"><i data-lucide="list-checks"></i> Requirements</h2>
+      <p class="detail-text">{{ ev.requirements }}</p>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% if ev.schedule %}
+    <div class="detail-section">
+      <h2 class="detail-section-title"><i data-lucide="calendar-clock"></i> Event Schedule</h2>
+      <div class="info-card">
+        <p class="detail-text">{{ ev.schedule }}</p>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if ev.rules %}
+    <div class="detail-section">
+      <h2 class="detail-section-title"><i data-lucide="shield-check"></i> Rules & Instructions</h2>
+      <div class="info-card">
+        <p class="detail-text">{{ ev.rules }}</p>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if ev.video %}
+    <div class="detail-section">
+      <h2 class="detail-section-title"><i data-lucide="play-circle"></i> Event Video</h2>
+      {% if 'youtube' in ev.video or 'youtu.be' in ev.video %}
+      <a href="{{ ev.video }}" target="_blank" rel="noopener" class="reg-btn">
+        <i data-lucide="youtube" style="width:16px;height:16px"></i> Watch on YouTube
+      </a>
+      {% else %}
+      <video src="{{ ev.video }}" controls style="width:100%;max-height:360px;border-radius:12px"></video>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% if gallery or media %}
+    <div class="detail-section">
+      <h2 class="detail-section-title"><i data-lucide="image"></i> Event Gallery</h2>
+      <div class="media-gallery">
+        {% for item in gallery %}
+        <div class="media-thumb">
+          {% if item.media_type == 'photo' and item.media_url %}
+          <img src="{{ item.media_url }}" alt="{{ item.caption or ev.title }}" loading="lazy"/>
+          {% elif item.media_type == 'video' and item.media_url %}
+          <video src="{{ item.media_url }}" controls></video>
+          {% endif %}
+        </div>
+        {% endfor %}
+        {% for item in media %}
+        {% if item.media_url %}
+        <div class="media-thumb">
+          {% if item.file_type and 'video' in item.file_type %}
+          <video src="{{ item.media_url }}" controls></video>
+          {% else %}
+          <img src="{{ item.media_url }}" alt="{{ item.title or ev.title }}" loading="lazy"/>
+          {% endif %}
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if winners %}
+    <div class="detail-section">
+      <h2 class="detail-section-title"><i data-lucide="trophy"></i> Event Winners</h2>
+      <div class="winners-row">
+        {% for w in winners %}
+        {% set pos_labels = {1:'🥇 1st Place', 2:'🥈 2nd Place', 3:'🥉 3rd Place', 4:'Runner-Up'} %}
+        {% set pos_cls = {1:'pos-1', 2:'pos-2', 3:'pos-3', 4:'pos-o'} %}
+        <a href="/winner/{{ w._id }}" class="w-card">
+          {% if w.photo %}
+          <img class="w-avatar" src="{{ w.photo }}" alt="{{ w.name }}" loading="lazy"/>
+          {% else %}
+          <div class="w-avatar-ph">{{ w.name[0]|upper }}</div>
+          {% endif %}
+          <div class="w-pos {{ pos_cls.get(w.position, 'pos-o') }}">
+            {{ pos_labels.get(w.position, 'Participant') }}
+          </div>
+          <div class="w-name">{{ w.name }}</div>
+          {% if w.department %}<div class="w-dept">{{ w.department }}{% if w.year %} · {{ w.year }}{% endif %}</div>{% endif %}
+          {% if w.achievement %}<div class="w-dept" style="margin-top:.35rem;font-style:italic">{{ w.achievement }}</div>{% endif %}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div><!-- /container -->
+
+  <!-- ── Footer ── -->
+  <footer class="footer" role="contentinfo">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <i data-lucide="monitor-dot" aria-hidden="true"></i>
+          <div><span class="footer-logo-main">SUG Computer Club</span><span class="footer-logo-sub">Web Craft</span></div>
+        </div>
+        <p class="footer-tagline">A creative space for designing, developing, and experiencing the power of the web.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <h4 class="footer-heading">Quick Links</h4>
+        <ul>
+          <li><a href="/index.html">Home</a></li><li><a href="/about.html">About</a></li>
+          <li><a href="/activities.html">Activities</a></li><li><a href="/members.html">Members</a></li>
+          <li><a href="/events.html">Events</a></li><li><a href="/gallery.html">Gallery</a></li>
+          <li><a href="/contact.html">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="footer-contact">
+        <h4 class="footer-heading">Faculty Coordinator</h4>
+        <p class="footer-coord-name">Mr. Jitendra Kumar Saini</p>
+        <p class="footer-coord-dept">Department of CSE</p>
+        <a href="tel:7669110295" class="footer-contact-link"><i data-lucide="phone" aria-hidden="true"></i> 7669110295</a>
+      </div>
+      <div class="footer-uni" style="grid-column:1/-1;">
+        <img src="/assets/logo/logo.png" alt="Shobhit University" width="52" height="52" />
+        <div class="footer-uni-text">
+          <strong>Shobhit University, Gangoh</strong>
+          <span>Department of Computer Science &amp; Engineering</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container"><p>&copy; 2026 SUG Computer Club – Web Craft. All rights reserved.</p>
+      <a href="/admin/login" style="display:inline-flex;align-items:center;gap:.3rem;margin-left:1rem;color:rgba(255,255,255,.35);font-size:.75rem;text-decoration:none" title="Admin Login"><i data-lucide="shield" style="width:12px;height:12px"></i> Admin</a></div>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+  <script>
+    // Hamburger menu
+    const ham = document.getElementById('hamburger');
+    const menu = document.getElementById('nav-menu');
+    const overlay = document.getElementById('nav-overlay');
+    if(ham){ham.addEventListener('click',()=>{ham.classList.toggle('active');menu.classList.toggle('active');overlay.classList.toggle('active');ham.setAttribute('aria-expanded',ham.classList.contains('active'));});}
+    if(overlay){overlay.addEventListener('click',()=>{ham.classList.remove('active');menu.classList.remove('active');overlay.classList.remove('active');ham.setAttribute('aria-expanded','false');});}
+    // Sticky navbar
+    window.addEventListener('scroll',()=>{document.getElementById('navbar').classList.toggle('scrolled',window.scrollY>30);},{passive:true});
+    lucide.createIcons();
+  </script>
+</body>
+</html>

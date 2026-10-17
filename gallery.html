@@ -36,6 +36,7 @@
         <li role="none"><a href="gallery.html" class="nav-link active" role="menuitem">Gallery</a></li>
         <li role="none"><a href="contact.html" class="nav-link" role="menuitem">Contact</a></li>
         <li role="none"><button onclick="openJoinModal()" class="btn btn-primary nav-cta" role="menuitem">Join Club</button></li>
+        <li role="none"><a href="/admin/login" class="nav-link nav-admin-link" role="menuitem" title="Admin Dashboard"><i data-lucide="shield" aria-hidden="true"></i> Admin</a></li>
       </ul>
       </div>    </div>
     <div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
@@ -64,42 +65,11 @@
         <button class="filter-btn">Projects</button>
       </div>
 
-      <div class="gallery-grid" data-animate="fade-up">
-        <div class="gallery-item">
-          <i data-lucide="image" aria-hidden="true"></i>
-          <span>HTML Session — Sep 2026</span>
-        </div>
-        <div class="gallery-item gallery-item--tall">
-          <i data-lucide="image" aria-hidden="true"></i>
-          <span>Students at Work</span>
-        </div>
-        <div class="gallery-item">
-          <i data-lucide="image" aria-hidden="true"></i>
-          <span>Code Review</span>
-        </div>
-        <div class="gallery-item">
-          <i data-lucide="image" aria-hidden="true"></i>
-          <span>Lab Session</span>
-        </div>
-        <div class="gallery-item">
-          <i data-lucide="image" aria-hidden="true"></i>
-          <span>Team Discussion</span>
-        </div>
-        <div class="gallery-item gallery-item--tall">
-          <i data-lucide="image" aria-hidden="true"></i>
-          <span>Group Photo</span>
-        </div>
-        <div class="gallery-item">
-          <i data-lucide="image" aria-hidden="true"></i>
-          <span>Presentation Day</span>
-        </div>
-        <div class="gallery-item">
-          <i data-lucide="image" aria-hidden="true"></i>
-          <span>CSS Styling Workshop</span>
-        </div>
-        <div class="gallery-item">
-          <i data-lucide="image" aria-hidden="true"></i>
-          <span>Coming Soon</span>
+      <!-- Gallery items are loaded dynamically from the Admin Dashboard -->
+      <div class="gallery-grid" data-animate="fade-up" id="dynamic-gallery-grid">
+        <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--c-text-mute,#6b6b9a);font-size:.875rem">
+          <i data-lucide="image" style="width:32px;height:32px;margin:0 auto .5rem;display:block;opacity:.4"></i>
+          Loading gallery…
         </div>
       </div>
 
@@ -121,7 +91,7 @@
           <span>Department of Computer Science &amp; Engineering</span>
         </div>
       </div>    </div>
-    <div class="footer-bottom"><div class="container"><p>&copy; 2026 SUG Computer Club – Web Craft. All rights reserved.</p></div></div>
+    <div class="footer-bottom"><div class="container"><p>&copy; 2026 SUG Computer Club – Web Craft. All rights reserved.</p><a href="/admin/login" style="display:inline-flex;align-items:center;gap:.3rem;margin-left:1rem;color:rgba(255,255,255,.35);font-size:.75rem;text-decoration:none;transition:color .2s" title="Admin Login"><i data-lucide="shield" style="width:12px;height:12px"></i> Admin</a></div></div>
   </footer>
 
   <div class="modal-overlay" id="joinModal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
@@ -141,5 +111,6 @@
   </div>
 
   <script src="js/main.js"></script>
+  <script src="js/dynamic-content.js"></script>
 </body>
 </html>

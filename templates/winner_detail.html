@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ w.name }} – Winner Profile | SUG Computer Club</title>
+  <meta name="description" content="{{ w.achievement or (w.name + ' won ' + (w.event_title or 'an event') + ' at SUG Computer Club Web Craft.') }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/responsive.css" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <style>
+    /* ── Winner Detail Styles ── */
+    .w-hero{padding:calc(var(--nav-h,72px) + 3rem) 0 4rem;background:linear-gradient(135deg,rgba(79,70,229,.18),rgba(124,58,237,.12))}
+    .detail-back{display:inline-flex;align-items:center;gap:.4rem;color:rgba(196,181,253,.65);font-size:.85rem;text-decoration:none;margin-bottom:2rem;transition:color .2s}
+    .detail-back:hover{color:#c4b5fd}
+    .w-hero-inner{display:grid;grid-template-columns:260px 1fr;gap:3.5rem;align-items:start}
+    .w-photo-wrap{text-align:center}
+    .w-photo{width:200px;height:200px;border-radius:50%;object-fit:cover;border:4px solid rgba(124,58,237,.5);box-shadow:0 0 40px rgba(124,58,237,.3);margin:0 auto 1.5rem;display:block}
+    .w-photo-ph{width:200px;height:200px;border-radius:50%;background:linear-gradient(135deg,rgba(124,58,237,.25),rgba(79,70,229,.2));display:flex;align-items:center;justify-content:center;font-size:4rem;font-weight:900;color:#c4b5fd;margin:0 auto 1.5rem;border:4px solid rgba(124,58,237,.3)}
+    .pos-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.45rem 1.2rem;border-radius:999px;font-weight:800;font-size:.85rem;letter-spacing:.05em;margin-bottom:1.25rem}
+    .pos-1-bg{background:linear-gradient(135deg,rgba(234,179,8,.25),rgba(234,179,8,.1));border:1px solid rgba(234,179,8,.4);color:#fde047}
+    .pos-2-bg{background:linear-gradient(135deg,rgba(226,232,240,.15),rgba(226,232,240,.05));border:1px solid rgba(226,232,240,.25);color:#e2e8f0}
+    .pos-3-bg{background:linear-gradient(135deg,rgba(249,115,22,.2),rgba(249,115,22,.08));border:1px solid rgba(249,115,22,.35);color:#f97316}
+    .pos-o-bg{background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);color:#c4b5fd}
+    .w-name-big{font-size:2.5rem;font-weight:900;line-height:1.1;background:linear-gradient(135deg,#fff 30%,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.5rem}
+    .w-meta-row{display:flex;flex-wrap:wrap;gap:.5rem .75rem;margin-bottom:1.5rem;font-size:.85rem;color:rgba(255,255,255,.6)}
+    .w-meta-tag{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .65rem;background:rgba(255,255,255,.07);border-radius:999px;border:1px solid rgba(255,255,255,.1)}
+    .w-meta-tag i{width:13px;height:13px;color:#a78bfa}
+    .achievement-block{background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.25);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:1.5rem}
+    .achievement-block p{color:rgba(255,255,255,.8);line-height:1.7;margin:0;font-size:.95rem}
+    .event-link-card{display:flex;align-items:center;gap:1rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:1.1rem 1.4rem;text-decoration:none;transition:all .2s;margin-top:.75rem}
+    .event-link-card:hover{border-color:rgba(124,58,237,.4);background:rgba(124,58,237,.08);transform:translateY(-2px)}
+    .event-link-icon{width:40px;height:40px;border-radius:10px;background:rgba(124,58,237,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .event-link-icon i{width:20px;height:20px;color:#a78bfa}
+    .event-link-text strong{display:block;color:#fff;font-size:.95rem}
+    .event-link-text span{font-size:.8rem;color:#6b6b9a}
+    .info-section{padding:2.5rem 0;border-top:1px solid rgba(255,255,255,.06)}
+    .info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem}
+    .info-tile{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:1.1rem 1.25rem}
+    .info-tile-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#6b6b9a;margin-bottom:.3rem}
+    .info-tile-val{color:rgba(255,255,255,.85);font-size:.9rem;line-height:1.5}
+    .section-title-sm{font-size:1.15rem;font-weight:700;color:#fff;margin-bottom:1rem;display:flex;align-items:center;gap:.4rem}
+    .section-title-sm i{width:18px;height:18px;color:#a78bfa}
+    @media(max-width:780px){.w-hero-inner{grid-template-columns:1fr}.w-photo-wrap{margin-bottom:.5rem}}
+    @media(max-width:480px){.w-name-big{font-size:1.75rem}.w-photo,.w-photo-ph{width:140px;height:140px}}
+  </style>
+</head>
+<body>
+  <!-- ── Navbar ── -->
+  <nav class="navbar" id="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container nav-container">
+      <a href="/" class="nav-logo" aria-label="SUG Computer Club Home">
+        <img src="/assets/logo/logo.png" alt="Shobhit University" class="logo-uni-img" width="42" height="42" />
+        <div class="logo-text">
+          <span class="logo-main">SUG Computer Club</span>
+          <span class="logo-sub">Web Craft</span>
+        </div>
+      </a>
+      <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-menu" id="nav-menu" role="menubar">
+        <li role="none"><a href="/index.html" class="nav-link" role="menuitem">Home</a></li>
+        <li role="none"><a href="/about.html" class="nav-link" role="menuitem">About</a></li>
+        <li role="none"><a href="/activities.html" class="nav-link" role="menuitem">Activities</a></li>
+        <li role="none"><a href="/members.html" class="nav-link" role="menuitem">Members</a></li>
+        <li role="none"><a href="/events.html" class="nav-link active" role="menuitem">Events</a></li>
+        <li role="none"><a href="/gallery.html" class="nav-link" role="menuitem">Gallery</a></li>
+        <li role="none"><a href="/contact.html" class="nav-link" role="menuitem">Contact</a></li>
+        <li role="none"><a href="/admin/login" class="nav-link nav-admin-link" role="menuitem" title="Admin Dashboard"><i data-lucide="shield" aria-hidden="true"></i> Admin</a></li>
+      </ul>
+    </div>
+    <div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section class="w-hero">
+    <div class="container">
+      <a href="/events.html" class="detail-back">
+        <i data-lucide="arrow-left" style="width:16px;height:16px"></i> Back to Events
+      </a>
+      <div class="w-hero-inner">
+        <!-- Photo -->
+        <div class="w-photo-wrap">
+          {% if w.photo %}
+          <img class="w-photo" src="{{ w.photo }}" alt="{{ w.name }}" loading="lazy"/>
+          {% else %}
+          <div class="w-photo-ph">{{ w.name[0]|upper }}</div>
+          {% endif %}
+          {% set pos_labels = {1:'🥇 1st Place', 2:'🥈 2nd Place', 3:'🥉 3rd Place', 4:'Runner-Up'} %}
+          {% set pos_bgs = {1:'pos-1-bg', 2:'pos-2-bg', 3:'pos-3-bg', 4:'pos-o-bg'} %}
+          <div class="pos-badge {{ pos_bgs.get(w.position, 'pos-o-bg') }}">
+            {{ pos_labels.get(w.position, 'Participant') }}
+          </div>
+        </div>
+
+        <!-- Info -->
+        <div>
+          <h1 class="w-name-big">{{ w.name }}</h1>
+          <!-- Meta tags -->
+          <div class="w-meta-row">
+            {% if w.department %}
+            <span class="w-meta-tag"><i data-lucide="graduation-cap"></i> {{ w.department }}</span>
+            {% endif %}
+            {% if w.year %}
+            <span class="w-meta-tag"><i data-lucide="calendar"></i> {{ w.year }}</span>
+            {% endif %}
+            {% if w.team_name %}
+            <span class="w-meta-tag"><i data-lucide="users"></i> Team: {{ w.team_name }}</span>
+            {% endif %}
+          </div>
+
+          {% if w.achievement %}
+          <div class="achievement-block">
+            <p>{{ w.achievement }}</p>
+          </div>
+          {% endif %}
+
+          <!-- Event link -->
+          {% if event %}
+          <p style="font-size:.8rem;color:#6b6b9a;margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.08em">Won at</p>
+          {% if event.published %}
+          <a href="/event/{{ event._id }}" class="event-link-card">
+          {% else %}
+          <div class="event-link-card" style="cursor:default">
+          {% endif %}
+            <div class="event-link-icon"><i data-lucide="calendar-check"></i></div>
+            <div class="event-link-text">
+              <strong>{{ event.title }}</strong>
+              <span>{{ event.date or 'Date TBA' }}{% if event.venue %} · {{ event.venue }}{% endif %}</span>
+            </div>
+            {% if event.published %}
+            <i data-lucide="chevron-right" style="width:16px;height:16px;color:#6b6b9a;margin-left:auto"></i>
+            {% endif %}
+          {% if event.published %}</a>{% else %}</div>{% endif %}
+          {% elif w.event_title %}
+          <p style="font-size:.85rem;color:rgba(255,255,255,.55);margin-top:.5rem">
+            <i data-lucide="calendar" style="width:13px;height:13px;vertical-align:middle"></i>
+            Won at: {{ w.event_title }}
+          </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Details ── -->
+  <div class="container">
+
+    <!-- Prize -->
+    {% if w.prize_amount or w.prize_desc %}
+    <div class="info-section">
+      <h2 class="section-title-sm"><i data-lucide="gift"></i> Prize &amp; Award</h2>
+      <div class="info-grid">
+        {% if w.prize_amount %}
+        <div class="info-tile">
+          <div class="info-tile-label">Prize Amount</div>
+          <div class="info-tile-val">{{ w.prize_amount }}</div>
+        </div>
+        {% endif %}
+        {% if w.prize_desc %}
+        <div class="info-tile" style="grid-column:1/-1">
+          <div class="info-tile-label">Prize Description</div>
+          <div class="info-tile-val">{{ w.prize_desc }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Project -->
+    {% if w.project_title or w.project_desc or w.project_link %}
+    <div class="info-section">
+      <h2 class="section-title-sm"><i data-lucide="code-2"></i> Project</h2>
+      {% if w.project_title %}<p style="font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:.5rem">{{ w.project_title }}</p>{% endif %}
+      {% if w.project_desc %}<p style="color:rgba(255,255,255,.75);line-height:1.7;margin-bottom:1rem">{{ w.project_desc }}</p>{% endif %}
+      {% if w.project_link %}
+      <a href="{{ w.project_link }}" target="_blank" rel="noopener"
+         style="display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1.4rem;background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);border-radius:999px;color:#c4b5fd;font-size:.85rem;text-decoration:none;font-weight:600;transition:all .2s">
+        <i data-lucide="external-link" style="width:14px;height:14px"></i> View Project
+      </a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Team -->
+    {% if w.team_name or w.teammates %}
+    <div class="info-section">
+      <h2 class="section-title-sm"><i data-lucide="users"></i> Team Information</h2>
+      <div class="info-grid">
+        {% if w.team_name %}
+        <div class="info-tile">
+          <div class="info-tile-label">Team Name</div>
+          <div class="info-tile-val">{{ w.team_name }}</div>
+        </div>
+        {% endif %}
+        {% if w.teammates %}
+        <div class="info-tile" style="grid-column:1/-1">
+          <div class="info-tile-label">Teammates</div>
+          <div class="info-tile-val">{{ w.teammates }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Certificate -->
+    {% if w.certificate_url %}
+    <div class="info-section">
+      <h2 class="section-title-sm"><i data-lucide="award"></i> Certificate</h2>
+      <a href="{{ w.certificate_url }}" target="_blank" rel="noopener"
+         style="display:inline-flex;align-items:center;gap:.4rem;padding:.65rem 1.5rem;background:linear-gradient(135deg,rgba(34,197,94,.2),rgba(34,197,94,.1));border:1px solid rgba(34,197,94,.35);border-radius:999px;color:#86efac;font-weight:600;font-size:.875rem;text-decoration:none;transition:all .2s">
+        <i data-lucide="download" style="width:15px;height:15px"></i> View / Download Certificate
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <!-- ── Footer ── -->
+  <footer class="footer" role="contentinfo">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <i data-lucide="monitor-dot" aria-hidden="true"></i>
+          <div><span class="footer-logo-main">SUG Computer Club</span><span class="footer-logo-sub">Web Craft</span></div>
+        </div>
+        <p class="footer-tagline">A creative space for designing, developing, and experiencing the power of the web.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <h4 class="footer-heading">Quick Links</h4>
+        <ul>
+          <li><a href="/index.html">Home</a></li><li><a href="/about.html">About</a></li>
+          <li><a href="/activities.html">Activities</a></li><li><a href="/members.html">Members</a></li>
+          <li><a href="/events.html">Events</a></li><li><a href="/gallery.html">Gallery</a></li>
+          <li><a href="/contact.html">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="footer-contact">
+        <h4 class="footer-heading">Faculty Coordinator</h4>
+        <p class="footer-coord-name">Mr. Jitendra Kumar Saini</p>
+        <p class="footer-coord-dept">Department of CSE</p>
+        <a href="tel:7669110295" class="footer-contact-link"><i data-lucide="phone" aria-hidden="true"></i> 7669110295</a>
+      </div>
+      <div class="footer-uni" style="grid-column:1/-1;">
+        <img src="/assets/logo/logo.png" alt="Shobhit University" width="52" height="52" />
+        <div class="footer-uni-text">
+          <strong>Shobhit University, Gangoh</strong>
+          <span>Department of Computer Science &amp; Engineering</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container"><p>&copy; 2026 SUG Computer Club – Web Craft. All rights reserved.</p>
+      <a href="/admin/login" style="display:inline-flex;align-items:center;gap:.3rem;margin-left:1rem;color:rgba(255,255,255,.35);font-size:.75rem;text-decoration:none" title="Admin Login"><i data-lucide="shield" style="width:12px;height:12px"></i> Admin</a></div>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+  <script>
+    const ham=document.getElementById('hamburger'),menu=document.getElementById('nav-menu'),ov=document.getElementById('nav-overlay');
+    if(ham){ham.addEventListener('click',()=>{ham.classList.toggle('active');menu.classList.toggle('active');ov.classList.toggle('active');ham.setAttribute('aria-expanded',ham.classList.contains('active'));});}
+    if(ov){ov.addEventListener('click',()=>{ham.classList.remove('active');menu.classList.remove('active');ov.classList.remove('active');ham.setAttribute('aria-expanded','false');});}
+    window.addEventListener('scroll',()=>{document.getElementById('navbar').classList.toggle('scrolled',window.scrollY>30);},{passive:true});
+    lucide.createIcons();
+  </script>
+</body>
+</html>

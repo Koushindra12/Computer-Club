@@ -41,6 +41,7 @@
         <li role="none"><a href="gallery.html" class="nav-link" role="menuitem">Gallery</a></li>
         <li role="none"><a href="contact.html" class="nav-link" role="menuitem">Contact</a></li>
         <li role="none"><button onclick="openJoinModal()" class="btn btn-primary nav-cta" role="menuitem">Join Club</button></li>
+        <li role="none"><a href="/admin/login" class="nav-link nav-admin-link" role="menuitem" title="Admin Dashboard"><i data-lucide="shield" aria-hidden="true"></i> Admin</a></li>
       </ul>
       </div>    </div>
     <div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
@@ -62,117 +63,12 @@
         <p class="section-desc">Each session builds on the previous one, creating a comprehensive full-stack learning path.</p>
       </div>
 
-      <div class="timeline" data-animate="fade-up">
-        <div class="timeline-item">
-          <div class="timeline-dot completed"></div>
-          <div class="timeline-card">
-            <div class="timeline-card-top">
-              <span class="act-tech-badge html-badge">HTML</span>
-              <span class="timeline-status status-completed">Completed</span>
-            </div>
-            <h3>Activity 01 — HTML Basics & Basic Web Page Creation</h3>
-            <p>Develop foundational HTML skills and create a basic webpage. Students learn document structure, semantic elements, forms, tables, and page layout fundamentals.</p>
-            <div class="timeline-meta">
-              <span><i data-lucide="calendar" aria-hidden="true"></i> 14 Sep 2026</span>
-              <span><i data-lucide="clock" aria-hidden="true"></i> Hands-on Session</span>
-            </div>
-          </div>
-        </div>
 
-        <div class="timeline-item">
-          <div class="timeline-dot"></div>
-          <div class="timeline-card">
-            <div class="timeline-card-top">
-              <span class="act-tech-badge css-badge">CSS</span>
-              <span class="timeline-status status-next">Up Next</span>
-            </div>
-            <h3>Activity 02 — CSS Web Page Design & Styling</h3>
-            <p>Apply CSS for attractive, structured, and user-friendly webpage design. Topics include selectors, box model, flexbox, grid, typography, and color theory.</p>
-            <div class="timeline-meta">
-              <span><i data-lucide="calendar" aria-hidden="true"></i> 12 Oct 2026</span>
-              <span><i data-lucide="clock" aria-hidden="true"></i> Hands-on Session</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="timeline-item">
-          <div class="timeline-dot"></div>
-          <div class="timeline-card">
-            <div class="timeline-card-top">
-              <span class="act-tech-badge js-badge">JS</span>
-              <span class="timeline-status status-upcoming">Upcoming</span>
-            </div>
-            <h3>Activity 03 — JavaScript Forms & Validation</h3>
-            <p>Develop interactive forms and implement basic JavaScript validation. Learn DOM manipulation, event handling, and client-side data verification.</p>
-            <div class="timeline-meta">
-              <span><i data-lucide="calendar" aria-hidden="true"></i> 09 Nov 2026</span>
-              <span><i data-lucide="clock" aria-hidden="true"></i> Hands-on Session</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="timeline-item">
-          <div class="timeline-dot"></div>
-          <div class="timeline-card">
-            <div class="timeline-card-top">
-              <span class="act-tech-badge rwd-badge">RWD</span>
-              <span class="timeline-status status-upcoming">Upcoming</span>
-            </div>
-            <h3>Activity 04 — Responsive Web Design</h3>
-            <p>Create webpages that work effectively on different screen sizes and devices. Master media queries, fluid layouts, mobile-first design, and viewport units.</p>
-            <div class="timeline-meta">
-              <span><i data-lucide="calendar" aria-hidden="true"></i> 30 Jan 2027</span>
-              <span><i data-lucide="clock" aria-hidden="true"></i> Hands-on Session</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="timeline-item">
-          <div class="timeline-dot"></div>
-          <div class="timeline-card">
-            <div class="timeline-card-top">
-              <span class="act-tech-badge php-badge">PHP</span>
-              <span class="timeline-status status-upcoming">Upcoming</span>
-            </div>
-            <h3>Activity 05 — PHP Backend Development & Database Connectivity</h3>
-            <p>Develop server-side applications using PHP and connect webpages with databases such as MySQL. Learn CRUD operations and data handling.</p>
-            <div class="timeline-meta">
-              <span><i data-lucide="calendar" aria-hidden="true"></i> 20 Feb 2027</span>
-              <span><i data-lucide="clock" aria-hidden="true"></i> Hands-on Session</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="timeline-item">
-          <div class="timeline-dot"></div>
-          <div class="timeline-card">
-            <div class="timeline-card-top">
-              <span class="act-tech-badge int-badge">INT</span>
-              <span class="timeline-status status-upcoming">Upcoming</span>
-            </div>
-            <h3>Activity 06 — Frontend–Backend Integration</h3>
-            <p>Connect HTML, CSS, JavaScript with PHP/Python backend and exchange data between frontend and server. Build end-to-end web workflows.</p>
-            <div class="timeline-meta">
-              <span><i data-lucide="calendar" aria-hidden="true"></i> 01 Mar 2027</span>
-              <span><i data-lucide="clock" aria-hidden="true"></i> Hands-on Session</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="timeline-item">
-          <div class="timeline-dot"></div>
-          <div class="timeline-card">
-            <div class="timeline-card-top">
-              <span class="act-tech-badge proj-badge">PROJECT</span>
-              <span class="timeline-status status-upcoming">Upcoming</span>
-            </div>
-            <h3>Activity 07 — Mini Website Development & Presentation</h3>
-            <p>Develop, present, and evaluate a complete mini website using HTML, CSS, JavaScript, PHP/Python, and database connectivity. Capstone project with peer review.</p>
-            <div class="timeline-meta">
-              <span><i data-lucide="calendar" aria-hidden="true"></i> 05 Mar 2027</span>
-              <span><i data-lucide="clock" aria-hidden="true"></i> Project Presentation</span>
-            </div>
-          </div>
+      <!-- Activities are loaded dynamically from the Admin Dashboard -->
+      <div id="dynamic-activities-timeline" class="timeline" data-animate="fade-up">
+        <div style="text-align:center;padding:2rem;color:#6b6b9a;font-size:.875rem">
+          <i data-lucide="loader" style="width:24px;height:24px;margin:0 auto .5rem;display:block;opacity:.5;animation:spin 1s linear infinite"></i>
+          Loading activities…
         </div>
       </div>
     </div>
@@ -223,7 +119,7 @@
         </div>
       </div>    </div>
     <div class="footer-bottom">
-      <div class="container"><p>&copy; 2026 SUG Computer Club – Web Craft. All rights reserved.</p></div>
+      <div class="container"><p>&copy; 2026 SUG Computer Club – Web Craft. All rights reserved.</p><a href="/admin/login" style="display:inline-flex;align-items:center;gap:.3rem;margin-left:1rem;color:rgba(255,255,255,.35);font-size:.75rem;text-decoration:none;transition:color .2s" title="Admin Login"><i data-lucide="shield" style="width:12px;height:12px"></i> Admin</a></div>
     </div>
   </footer>
 
@@ -258,5 +154,6 @@
   </div>
 
   <script src="js/main.js"></script>
+  <script src="js/dynamic-content.js"></script>
 </body>
 </html>

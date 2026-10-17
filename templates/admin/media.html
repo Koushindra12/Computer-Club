@@ -1,0 +1,291 @@
+{% extends "admin/base.html" %}
+{% set active = "media" %}
+{% block title %}Media – Admin{% endblock %}
+{% block page_title %}Media Management{% endblock %}
+{% block breadcrumb %}Media{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom:1.5rem">
+  <div class="card-header">
+    <div class="card-title"><i data-lucide="upload-cloud"></i> Upload Multiple Files</div>
+  </div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label class="form-label">Associate With</label>
+      <select id="parentType" onchange="onParentTypeChange()">
+        <option value="general">General / Gallery</option>
+        <option value="event">Event</option>
+        <option value="activity">Activity</option>
+      </select>
+    </div>
+    <div class="form-group" id="parentSelectWrap" style="display:none">
+      <label class="form-label">Select Parent</label>
+      <select id="parentId"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Caption (applied to all)</label>
+      <input type="text" id="uploadCaption" placeholder="Optional caption…"/>
+    </div>
+    <div class="form-group">
+      <label class="checkbox-wrap">
+        <input type="checkbox" id="uploadPublished"/>
+        <span>Publish immediately</span>
+      </label>
+    </div>
+    <div class="form-group form-full">
+      <label class="form-label">Select Files (images + videos, multiple)</label>
+      <div id="dropZone" class="drop-zone">
+        <input type="file" id="fileInput" multiple accept="image/*,video/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2"/>
+        <i data-lucide="upload-cloud" style="width:36px;height:36px;margin:0 auto .5rem;display:block;opacity:.5"></i>
+        <p style="font-size:.875rem;color:var(--text-mute)">Drag & drop files here, or click to browse</p>
+        <p style="font-size:.75rem;color:var(--text-mute);margin-top:.25rem">PNG, JPG, WebP, GIF, MP4, WebM, MOV — max 32 MB each</p>
+      </div>
+      <div id="filePreviewGrid" class="file-preview-grid" style="display:none"></div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:.75rem;margin-top:.75rem;flex-wrap:wrap">
+    <button class="btn btn-primary" id="uploadBtn" onclick="doUpload()" disabled>
+      <i data-lucide="upload" style="width:15px;height:15px"></i> Upload Selected Files
+    </button>
+    <button class="btn btn-outline" onclick="clearFiles()">
+      <i data-lucide="x" style="width:15px;height:15px"></i> Clear
+    </button>
+    <div id="uploadProgress" style="display:none;font-size:.8125rem;color:var(--text-sec)">
+      <i data-lucide="loader" style="width:14px;height:14px;animation:spin 1s linear infinite"></i>
+      Uploading…
+    </div>
+  </div>
+</div>
+
+<!-- Existing media library -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title"><i data-lucide="image"></i> Media Library</div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+      <select id="filterType" onchange="loadMedia()" style="max-width:160px">
+        <option value="">All Types</option>
+        <option value="photo">Photos Only</option>
+        <option value="video">Videos Only</option>
+      </select>
+      <button class="btn btn-danger btn-sm" id="bulkDeleteBtn" onclick="bulkDelete()" style="display:none">
+        <i data-lucide="trash-2" style="width:14px;height:14px"></i> Delete Selected
+      </button>
+    </div>
+  </div>
+  <div id="mediaLibrary"><div class="loading-state"><i data-lucide="loader" style="width:20px;height:20px;animation:spin 1s linear infinite"></i> Loading…</div></div>
+</div>
+
+<style>
+@keyframes spin{to{transform:rotate(360deg)}}
+.drop-zone{position:relative;border:2px dashed var(--border);border-radius:var(--r-md);
+           padding:2rem;text-align:center;cursor:pointer;transition:all var(--dur) var(--ease);background:rgba(255,255,255,.03)}
+.drop-zone.drag-over{border-color:var(--purple);background:rgba(124,58,237,.08)}
+.file-preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.75rem;margin-top:1rem}
+.fp-card{background:rgba(0,0,0,.2);border:1px solid var(--border);border-radius:var(--r-sm);
+         overflow:hidden;position:relative}
+.fp-thumb{width:100%;height:90px;object-fit:cover;display:block}
+.fp-remove{position:absolute;top:.25rem;right:.25rem;background:rgba(239,68,68,.8);
+           border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;
+           display:flex;align-items:center;justify-content:center;color:#fff;font-size:.65rem}
+.fp-label{padding:.3rem .4rem;font-size:.65rem;color:var(--text-mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.media-lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;margin-top:.5rem}
+.ml-card{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:var(--r-md);
+         overflow:hidden;position:relative;transition:all var(--dur) var(--ease)}
+.ml-card:hover{border-color:rgba(124,58,237,.4)}
+.ml-select{position:absolute;top:.4rem;left:.4rem;z-index:2;accent-color:var(--purple)}
+.ml-thumb{width:100%;height:110px;object-fit:cover;display:block;background:rgba(0,0,0,.3)}
+.ml-thumb-placeholder{width:100%;height:110px;display:flex;align-items:center;justify-content:center;
+                      background:rgba(0,0,0,.3);color:var(--text-mute)}
+.ml-info{padding:.5rem .65rem}
+.ml-caption{font-size:.75rem;font-weight:500;color:var(--text-white);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ml-meta{font-size:.65rem;color:var(--text-mute);margin-top:.15rem}
+.ml-actions{display:flex;gap:.3rem;padding:.4rem .65rem .55rem;flex-wrap:wrap}
+.pub-dot{position:absolute;top:.4rem;right:.4rem;width:8px;height:8px;border-radius:50%}
+.pub-dot.pub{background:#22c55e}.pub-dot.draft{background:var(--text-mute)}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const eventsList     = {{ events | tojson }};
+const activitiesList = {{ activities | tojson }};
+let selectedFiles = [];
+let selectedMediaIds = new Set();
+
+// ── Parent type select ──
+function onParentTypeChange(){
+  const t = document.getElementById('parentType').value;
+  const w = document.getElementById('parentSelectWrap');
+  const s = document.getElementById('parentId');
+  if(t==='event'){
+    w.style.display='flex';
+    s.innerHTML='<option value="">Select event…</option>' +
+      eventsList.map(e=>`<option value="${e._id}">${esc(e.title)}</option>`).join('');
+  } else if(t==='activity'){
+    w.style.display='flex';
+    s.innerHTML='<option value="">Select activity…</option>' +
+      activitiesList.map(a=>`<option value="${a._id}">${esc(a.title)}</option>`).join('');
+  } else {
+    w.style.display='none'; s.innerHTML='';
+  }
+}
+
+// ── File selection ──
+const fileInput = document.getElementById('fileInput');
+const dropZone  = document.getElementById('dropZone');
+
+fileInput.addEventListener('change', e => addFiles(e.target.files));
+dropZone.addEventListener('dragover', e => {e.preventDefault();dropZone.classList.add('drag-over')});
+dropZone.addEventListener('dragleave', ()=>dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e=>{e.preventDefault();dropZone.classList.remove('drag-over');addFiles(e.dataTransfer.files)});
+
+function addFiles(files){
+  for(const f of files) selectedFiles.push(f);
+  renderPreviews();
+  document.getElementById('uploadBtn').disabled = selectedFiles.length===0;
+}
+
+function renderPreviews(){
+  const grid = document.getElementById('filePreviewGrid');
+  if(!selectedFiles.length){grid.style.display='none';return;}
+  grid.style.display='grid';
+  grid.innerHTML = selectedFiles.map((f,i)=>{
+    const url = URL.createObjectURL(f);
+    const isVid = f.type.startsWith('video/');
+    const thumb = isVid
+      ? `<div class="fp-thumb" style="display:flex;align-items:center;justify-content:center;background:#111;color:#888"><i data-lucide="film" style="width:24px;height:24px"></i></div>`
+      : `<img class="fp-thumb" src="${url}" alt="preview"/>`;
+    return `<div class="fp-card">
+      ${thumb}
+      <button class="fp-remove" onclick="removeFile(${i})">✕</button>
+      <div class="fp-label">${esc(f.name)}</div>
+    </div>`;
+  }).join('');
+  if(typeof lucide!=='undefined') lucide.createIcons();
+}
+
+function removeFile(i){
+  selectedFiles.splice(i,1);
+  renderPreviews();
+  document.getElementById('uploadBtn').disabled = selectedFiles.length===0;
+}
+
+function clearFiles(){
+  selectedFiles=[];
+  fileInput.value='';
+  renderPreviews();
+  document.getElementById('uploadBtn').disabled=true;
+}
+
+// ── Upload ──
+async function doUpload(){
+  if(!selectedFiles.length){showToast('No files selected','error');return;}
+  const btn = document.getElementById('uploadBtn');
+  const prog = document.getElementById('uploadProgress');
+  btn.disabled=true; prog.style.display='flex';
+  try{
+    const fd = new FormData();
+    selectedFiles.forEach(f=>fd.append('files',f));
+    fd.append('parent_type', document.getElementById('parentType').value);
+    const pid = document.getElementById('parentId')?.value || '';
+    fd.append('parent_id', pid);
+    fd.append('caption', document.getElementById('uploadCaption').value);
+    fd.append('published', document.getElementById('uploadPublished').checked?'true':'false');
+    const r = await fetch('/api/admin/media/upload',{method:'POST',body:fd});
+    const data = await r.json();
+    if(!r.ok) throw new Error(data.error||'Upload failed');
+    showToast(`${data.created.length} file(s) uploaded!`, data.errors.length?'info':'success');
+    if(data.errors.length) showToast(`${data.errors.length} file(s) failed: ${data.errors.join(', ')}`,'error');
+    clearFiles();
+    await loadMedia();
+  }catch(e){showToast(e.message,'error')}
+  finally{btn.disabled=false;prog.style.display='none';}
+}
+
+// ── Library ──
+async function loadMedia(){
+  const t = document.getElementById('filterType')?.value || '';
+  const url = t?`/api/admin/media?media_type=${t}`:'/api/admin/media';
+  try{
+    const items = await apiGet(url);
+    renderLibrary(items);
+  }catch(e){
+    document.getElementById('mediaLibrary').innerHTML=`<div class="empty-state"><p>${e.message}</p></div>`;
+  }
+}
+
+function renderLibrary(items){
+  if(!items.length){
+    document.getElementById('mediaLibrary').innerHTML=`<div class="empty-state"><i data-lucide="image"></i><p>No media uploaded yet.</p></div>`;
+    if(typeof lucide!=='undefined') lucide.createIcons();
+    return;
+  }
+  document.getElementById('mediaLibrary').innerHTML=`<div class="media-lib-grid">${items.map(m=>{
+    let thumb='';
+    if(m.media_type==='photo'&&m.media_url){
+      thumb=`<img class="ml-thumb" src="${esc(m.media_url)}" alt="${esc(m.caption||'')}"/>`;
+    } else if(m.media_type==='video'&&m.media_url){
+      thumb=`<div class="ml-thumb-placeholder"><i data-lucide="film" style="width:24px;height:24px"></i></div>`;
+    } else {
+      thumb=`<div class="ml-thumb-placeholder"><i data-lucide="image" style="width:24px;height:24px"></i></div>`;
+    }
+    return `<div class="ml-card" id="mlcard-${m._id}">
+      <input type="checkbox" class="ml-select" id="sel-${m._id}" onchange="onSelect('${m._id}',this.checked)"/>
+      <div class="pub-dot ${m.published?'pub':'draft'}"></div>
+      ${thumb}
+      <div class="ml-info">
+        <div class="ml-caption">${esc(m.caption||m.original_name||'Untitled')}</div>
+        <div class="ml-meta">${m.media_type||'photo'} · ${m.parent_type||'general'}</div>
+      </div>
+      <div class="ml-actions">
+        <button class="btn ${m.published?'btn-warning':'btn-success'} btn-sm" style="font-size:.65rem;padding:.25rem .55rem" onclick="togglePub('${m._id}',${m.published})">${m.published?'Unpub':'Pub'}</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteOne('${m._id}')" title="Delete"><i data-lucide="trash-2" style="width:12px;height:12px"></i></button>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+  if(typeof lucide!=='undefined') lucide.createIcons();
+}
+
+function onSelect(id, checked){
+  if(checked) selectedMediaIds.add(id); else selectedMediaIds.delete(id);
+  document.getElementById('bulkDeleteBtn').style.display = selectedMediaIds.size?'flex':'none';
+}
+
+async function togglePub(id, current){
+  try{
+    await apiPublish(`/api/admin/media/${id}/publish`,!current);
+    showToast(!current?'Published!':'Unpublished.','success');
+    await loadMedia();
+  }catch(e){showToast(e.message,'error')}
+}
+
+function deleteOne(id){
+  showConfirm('Delete Media','Remove this media item? The file will be permanently deleted.',async()=>{
+    try{
+      await apiDelete(`/api/admin/media/${id}`);
+      showToast('Deleted.','success');
+      selectedMediaIds.delete(id);
+      await loadMedia();
+    }catch(e){showToast(e.message,'error')}
+  });
+}
+
+function bulkDelete(){
+  const ids = [...selectedMediaIds];
+  showConfirm('Bulk Delete',`Permanently delete ${ids.length} selected item(s)?`,async()=>{
+    try{
+      const r = await fetch('/api/admin/media/bulk-delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids})});
+      const data = await r.json();
+      showToast(`Deleted ${data.deleted} item(s).`,'success');
+      selectedMediaIds.clear();
+      document.getElementById('bulkDeleteBtn').style.display='none';
+      await loadMedia();
+    }catch(e){showToast(e.message,'error')}
+  },'trash-2','Delete All','btn-danger');
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+loadMedia();
+</script>
+{% endblock %}

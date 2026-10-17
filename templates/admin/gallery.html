@@ -1,0 +1,255 @@
+{% extends "admin/base.html" %}
+{% set active = "gallery" %}
+{% block title %}Gallery – Admin{% endblock %}
+{% block page_title %}Gallery Management{% endblock %}
+{% block breadcrumb %}Gallery{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-title"><i data-lucide="image"></i> Gallery Items</div>
+    <button class="btn btn-primary" onclick="openAddModal()">
+      <i data-lucide="upload" style="width:15px;height:15px"></i> Upload / Add
+    </button>
+  </div>
+
+  <!-- Tabs: photos / videos / all -->
+  <div data-tabs>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="all">All</button>
+      <button class="tab-btn" data-tab="photos">Photos</button>
+      <button class="tab-btn" data-tab="videos">Videos</button>
+    </div>
+    <div class="tab-pane active" data-tab-pane="all" id="galleryGridAll"></div>
+    <div class="tab-pane" data-tab-pane="photos" id="galleryGridPhotos"></div>
+    <div class="tab-pane" data-tab-pane="videos" id="galleryGridVideos"></div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="galleryModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title"><i data-lucide="image"></i> <span id="galleryModalTitle">Add Gallery Item</span></div>
+      <button class="modal-close-btn" onclick="closeModal('galleryModal')"><i data-lucide="x" style="width:18px;height:18px"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="galleryForm" enctype="multipart/form-data">
+        <input type="hidden" id="galleryItemId" value=""/>
+        <div class="form-grid">
+          <div class="form-group form-full">
+            <label class="form-label">Upload File (image or video)</label>
+            <div id="galleryMediaPreview" class="media-preview" style="display:none;margin-bottom:.5rem"></div>
+            <div class="file-input-wrap">
+              <input type="file" id="gal_media" name="media" accept="image/*,video/*"/>
+              <div class="file-input-label"><i data-lucide="upload" style="width:15px;height:15px"></i> Choose image or video</div>
+            </div>
+            <label class="checkbox-wrap" style="margin-top:.5rem" id="removeGalMediaWrap" style="display:none">
+              <input type="checkbox" id="gal_remove_media" name="remove_media" value="true"/>
+              <span>Remove existing file</span>
+            </label>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Or External Video Link (YouTube / URL)</label>
+            <input type="url" id="gal_ext_link" name="ext_link" placeholder="https://youtube.com/…"/>
+            <span class="form-hint">Leave blank if uploading a file above.</span>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Caption</label>
+            <input type="text" id="gal_caption" name="caption" placeholder="Short caption…"/>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Description</label>
+            <textarea id="gal_desc" name="description" rows="2" placeholder="Optional longer description…"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <input type="text" id="gal_category" name="category" placeholder="e.g. HTML Session, General"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Associated Event (optional)</label>
+            <input type="text" id="gal_event_id" name="event_id" placeholder="Event ID (optional)"/>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-wrap">
+              <input type="checkbox" id="gal_published" name="published" value="true"/>
+              <span>Publish immediately</span>
+            </label>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('galleryModal')">Cancel</button>
+      <button class="btn btn-primary" id="saveGalBtn" onclick="saveGalleryItem()">
+        <i data-lucide="save" style="width:15px;height:15px"></i> Save
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes spin{to{transform:rotate(360deg)}}
+.gallery-admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-top:.5rem}
+.gal-admin-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);
+                overflow:hidden;position:relative;transition:all .25s}
+.gal-admin-card:hover{border-color:rgba(124,58,237,.4)}
+.gal-thumb{width:100%;height:140px;object-fit:cover;display:block;background:rgba(0,0,0,.3)}
+.gal-thumb-placeholder{width:100%;height:140px;display:flex;align-items:center;justify-content:center;
+                        background:rgba(0,0,0,.3);color:var(--text-mute);flex-direction:column;gap:.35rem;font-size:.75rem}
+.gal-info{padding:.6rem .75rem}
+.gal-caption{font-size:.8125rem;font-weight:500;color:var(--text-white);
+             white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gal-meta{font-size:.7rem;color:var(--text-mute);margin-top:.2rem}
+.gal-actions{display:flex;gap:.35rem;padding:.5rem .75rem .65rem;flex-wrap:wrap}
+.pub-dot{position:absolute;top:.5rem;right:.5rem;width:8px;height:8px;border-radius:50%}
+.pub-dot.pub{background:#22c55e} .pub-dot.draft{background:var(--text-mute)}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let allItems=[];
+
+async function loadGallery(){
+  try{
+    allItems=await apiGet('/api/admin/gallery');
+    renderGrids();
+  }catch(e){
+    document.getElementById('galleryGridAll').innerHTML=`<div class="empty-state"><p>${e.message}</p></div>`;
+  }
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function cardHTML(item){
+  let thumb='';
+  if(item.media_url&&item.media_type==='photo'){
+    thumb=`<img class="gal-thumb" src="${esc(item.media_url)}" alt="${esc(item.caption||'')}"/>`;
+  } else if(item.media_url&&item.media_type==='video'){
+    if(item.media_url.includes('youtube')||item.media_url.includes('youtu.be')){
+      thumb=`<div class="gal-thumb-placeholder"><i data-lucide="youtube" style="width:28px;height:28px;color:#f87171"></i><span>YouTube</span></div>`;
+    } else {
+      thumb=`<video class="gal-thumb" src="${esc(item.media_url)}" muted></video>`;
+    }
+  } else {
+    thumb=`<div class="gal-thumb-placeholder"><i data-lucide="image" style="width:28px;height:28px"></i><span>No media</span></div>`;
+  }
+  return `<div class="gal-admin-card">
+    <div class="pub-dot ${item.published?'pub':'draft'}"></div>
+    ${thumb}
+    <div class="gal-info">
+      <div class="gal-caption">${esc(item.caption||'Untitled')}</div>
+      <div class="gal-meta">${esc(item.category||'General')} · ${item.media_type||'photo'}</div>
+    </div>
+    <div class="gal-actions">
+      <button class="btn btn-outline btn-sm btn-icon" onclick="editItem('${item._id}')" title="Edit"><i data-lucide="pencil" style="width:13px;height:13px"></i></button>
+      <button class="btn ${item.published?'btn-warning':'btn-success'} btn-sm" style="font-size:.7rem;padding:.3rem .6rem" onclick="togglePub('${item._id}',${item.published})">${item.published?'Unpub':'Publish'}</button>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="deleteItem('${item._id}','${esc(item.caption||'this item')}')" title="Delete"><i data-lucide="trash-2" style="width:13px;height:13px"></i></button>
+    </div>
+  </div>`;
+}
+
+function renderGrids(){
+  const photos=allItems.filter(i=>i.media_type==='photo');
+  const videos=allItems.filter(i=>i.media_type==='video');
+  const render=(items,containerId)=>{
+    if(!items.length){
+      document.getElementById(containerId).innerHTML=`<div class="empty-state"><i data-lucide="image"></i><p>No items yet.</p></div>`;
+    } else {
+      document.getElementById(containerId).innerHTML=`<div class="gallery-admin-grid">${items.map(cardHTML).join('')}</div>`;
+    }
+  };
+  render(allItems,'galleryGridAll');
+  render(photos,'galleryGridPhotos');
+  render(videos,'galleryGridVideos');
+  if(typeof lucide!=='undefined') lucide.createIcons();
+}
+
+function resetForm(){
+  document.getElementById('galleryForm').reset();
+  document.getElementById('galleryItemId').value='';
+  document.getElementById('galleryMediaPreview').style.display='none';
+  document.getElementById('removeGalMediaWrap').style.display='none';
+}
+
+function openAddModal(){resetForm();document.getElementById('galleryModalTitle').textContent='Add Gallery Item';openModal('galleryModal')}
+
+async function editItem(id){
+  try{
+    const item=await apiGet('/api/admin/gallery/'+id);
+    resetForm();
+    document.getElementById('galleryItemId').value=item._id;
+    document.getElementById('gal_caption').value=item.caption||'';
+    document.getElementById('gal_desc').value=item.description||'';
+    document.getElementById('gal_category').value=item.category||'';
+    document.getElementById('gal_event_id').value=item.event_id||'';
+    document.getElementById('gal_published').checked=!!item.published;
+    if(item.media_url){
+      if(item.media_type==='photo'){
+        document.getElementById('galleryMediaPreview').innerHTML=`<img src="${esc(item.media_url)}" alt="preview"/>`;
+      } else {
+        document.getElementById('galleryMediaPreview').innerHTML=`<div style="padding:1rem;color:var(--text-mute);font-size:.8125rem">Video: ${esc(item.media_url)}</div>`;
+      }
+      document.getElementById('galleryMediaPreview').style.display='flex';
+      document.getElementById('removeGalMediaWrap').style.display='flex';
+      if(!item.media_url.startsWith('/uploads/'))
+        document.getElementById('gal_ext_link').value=item.media_url;
+    }
+    document.getElementById('galleryModalTitle').textContent='Edit Gallery Item';
+    openModal('galleryModal');
+  }catch(e){showToast(e.message,'error')}
+}
+
+async function saveGalleryItem(){
+  const btn=document.getElementById('saveGalBtn');
+  btn.disabled=true;btn.textContent='Saving…';
+  try{
+    const id=document.getElementById('galleryItemId').value;
+    const fd=new FormData(document.getElementById('galleryForm'));
+    fd.set('published',document.getElementById('gal_published').checked?'true':'false');
+    if(document.getElementById('gal_remove_media')?.checked) fd.set('remove_media','true');
+    const url=id?`/api/admin/gallery/${id}`:'/api/admin/gallery';
+    await apiPost(url,fd);
+    showToast(id?'Gallery item updated!':'Gallery item added!','success');
+    closeModal('galleryModal');
+    await loadGallery();
+  }catch(e){showToast(e.message,'error')}
+  finally{btn.disabled=false;btn.innerHTML='<i data-lucide="save" style="width:15px;height:15px"></i> Save';if(typeof lucide!=='undefined')lucide.createIcons()}
+}
+
+async function togglePub(id,current){
+  try{
+    await apiPublish(`/api/admin/gallery/${id}/publish`,!current);
+    showToast(!current?'Published!':'Unpublished.','success');
+    await loadGallery();
+  }catch(e){showToast(e.message,'error')}
+}
+
+function deleteItem(id,caption){
+  showConfirm('Delete Gallery Item',`Remove "${caption}" from the gallery? This cannot be undone.`,async()=>{
+    try{
+      await apiDelete(`/api/admin/gallery/${id}`);
+      showToast('Gallery item deleted.','success');
+      await loadGallery();
+    }catch(e){showToast(e.message,'error')}
+  });
+}
+
+wireFilePreview('gal_media','galleryMediaPreview');
+
+// Re-init tabs after dynamic content
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',function(){
+    const group=this.closest('[data-tabs]');
+    group.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    group.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+    this.classList.add('active');
+    const pane=group.querySelector(`[data-tab-pane="${this.dataset.tab}"]`);
+    if(pane) pane.classList.add('active');
+  });
+});
+
+loadGallery();
+</script>
+{% endblock %}

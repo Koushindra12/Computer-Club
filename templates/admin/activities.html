@@ -1,0 +1,263 @@
+{% extends "admin/base.html" %}
+{% set active = "activities" %}
+{% block title %}Activities – Admin{% endblock %}
+{% block page_title %}Activity Management{% endblock %}
+{% block breadcrumb %}Activities{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-title"><i data-lucide="layers"></i> All Activities</div>
+    <button class="btn btn-primary" onclick="openAddModal()">
+      <i data-lucide="plus" style="width:15px;height:15px"></i> Add Activity
+    </button>
+  </div>
+  <div id="activitiesTableWrap">
+    <div class="loading-state"><i data-lucide="loader" style="width:20px;height:20px;animation:spin 1s linear infinite"></i> Loading…</div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="actModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title"><i data-lucide="layers"></i> <span id="actModalTitle">Add Activity</span></div>
+      <button class="modal-close-btn" onclick="closeModal('actModal')"><i data-lucide="x" style="width:18px;height:18px"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="actForm" enctype="multipart/form-data">
+        <input type="hidden" id="actId" value=""/>
+        <div class="form-grid">
+          <div class="form-group form-full">
+            <label class="form-label">Activity Title <span class="req">*</span></label>
+            <input type="text" id="act_title" name="title" placeholder="e.g. Activity 01 — HTML Basics" required/>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Description</label>
+            <textarea id="act_desc" name="description" rows="3" placeholder="Describe the activity…"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="text" id="act_date" name="date" placeholder="e.g. 14 Sep 2026"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category / Technology</label>
+            <input type="text" id="act_category" name="category" placeholder="e.g. HTML, CSS, JavaScript"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Badge Label</label>
+            <input type="text" id="act_badge" name="badge" placeholder="e.g. HTML"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Badge Style</label>
+            <select id="act_badge_class" name="badge_class">
+              <option value="">None</option>
+              <option value="html-badge">HTML (orange)</option>
+              <option value="css-badge">CSS (blue)</option>
+              <option value="js-badge">JS (yellow)</option>
+              <option value="rwd-badge">RWD (teal)</option>
+              <option value="php-badge">PHP (purple)</option>
+              <option value="int-badge">Integration (pink)</option>
+              <option value="proj-badge">Project (green)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Display Order</label>
+            <input type="number" id="act_order" name="order" value="99" min="1" max="999"/>
+            <span class="form-hint">Lower numbers appear first.</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">External Link (optional)</label>
+            <input type="url" id="act_ext_link" name="ext_link" placeholder="https://…"/>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Cover Photograph</label>
+            <div id="actPhotoPreview" class="media-preview" style="display:none;margin-bottom:.5rem"></div>
+            <div class="file-input-wrap">
+              <input type="file" id="act_photo" name="photo" accept="image/*"/>
+              <div class="file-input-label"><i data-lucide="image" style="width:15px;height:15px"></i> Choose image</div>
+            </div>
+            <label class="checkbox-wrap" style="margin-top:.5rem" id="removeActPhotoWrap" style="display:none">
+              <input type="checkbox" id="act_remove_photo" name="remove_photo" value="true"/>
+              <span>Remove existing photo</span>
+            </label>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Video (upload)</label>
+            <div id="actVideoPreview" class="media-preview" style="display:none;margin-bottom:.5rem"></div>
+            <div class="file-input-wrap">
+              <input type="file" id="act_video" name="video" accept="video/*"/>
+              <div class="file-input-label"><i data-lucide="film" style="width:15px;height:15px"></i> Choose video</div>
+            </div>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Or Video Link (YouTube / URL)</label>
+            <input type="url" id="act_video_link" name="video_link" placeholder="https://youtube.com/…"/>
+            <label class="checkbox-wrap" style="margin-top:.5rem" id="removeActVideoWrap" style="display:none">
+              <input type="checkbox" id="act_remove_video" name="remove_video" value="true"/>
+              <span>Remove existing video</span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-wrap">
+              <input type="checkbox" id="act_published" name="published" value="true"/>
+              <span>Publish immediately</span>
+            </label>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('actModal')">Cancel</button>
+      <button class="btn btn-primary" id="saveActBtn" onclick="saveActivity()">
+        <i data-lucide="save" style="width:15px;height:15px"></i> Save Activity
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let allActivities=[];
+
+async function loadActivities(){
+  try{
+    allActivities=await apiGet('/api/admin/activities');
+    renderTable();
+  }catch(e){
+    document.getElementById('activitiesTableWrap').innerHTML=`<div class="empty-state"><p>${e.message}</p></div>`;
+  }
+}
+
+function renderTable(){
+  if(!allActivities.length){
+    document.getElementById('activitiesTableWrap').innerHTML=`<div class="empty-state"><i data-lucide="layers"></i><p>No activities yet.</p></div>`;
+    if(typeof lucide!=='undefined') lucide.createIcons();
+    return;
+  }
+  let rows=allActivities.map(a=>`
+    <tr>
+      <td>${a.order||'-'}</td>
+      <td><div class="truncate" title="${esc(a.title)}">${esc(a.title)}</div></td>
+      <td>${a.badge?`<span class="act-tech-badge ${esc(a.badge_class||'proj-badge')}" style="font-size:.7rem;padding:.2rem .55rem">${esc(a.badge)}</span>`:'-'}</td>
+      <td>${esc(a.date||'-')}</td>
+      <td>${pubBadge(a.published)}</td>
+      <td>${a.photo?`<img src="${esc(a.photo)}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,.1)" alt="photo"/>`:'<span class="text-mute">—</span>'}</td>
+      <td>
+        <div class="td-actions">
+          <button class="btn btn-outline btn-sm btn-icon" onclick="editActivity('${a._id}')" title="Edit"><i data-lucide="pencil" style="width:14px;height:14px"></i></button>
+          <button class="btn ${a.published?'btn-warning':'btn-success'} btn-sm" onclick="togglePublish('${a._id}',${a.published})">${a.published?'Unpublish':'Publish'}</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteActivity('${a._id}','${esc(a.title)}')" title="Delete"><i data-lucide="trash-2" style="width:14px;height:14px"></i></button>
+        </div>
+      </td>
+    </tr>`).join('');
+  document.getElementById('activitiesTableWrap').innerHTML=`
+    <div class="table-wrap"><table>
+      <thead><tr><th>#</th><th>Title</th><th>Badge</th><th>Date</th><th>Status</th><th>Photo</th><th>Actions</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+  injectBadgeCSS();
+  if(typeof lucide!=='undefined') lucide.createIcons();
+}
+
+function injectBadgeCSS(){
+  if(document.getElementById('badgeStyles')) return;
+  const s=document.createElement('style');s.id='badgeStyles';
+  s.textContent=`.act-tech-badge{display:inline-flex;align-items:center;font-weight:700;border-radius:6px;padding:.25rem .65rem;font-size:.7rem}
+  .html-badge{background:rgba(249,115,22,.18);color:#fb923c;border:1px solid rgba(249,115,22,.3)}
+  .css-badge{background:rgba(59,130,246,.18);color:#93c5fd;border:1px solid rgba(59,130,246,.3)}
+  .js-badge{background:rgba(234,179,8,.18);color:#fde047;border:1px solid rgba(234,179,8,.3)}
+  .rwd-badge{background:rgba(20,184,166,.18);color:#5eead4;border:1px solid rgba(20,184,166,.3)}
+  .php-badge{background:rgba(139,92,246,.18);color:#c4b5fd;border:1px solid rgba(139,92,246,.3)}
+  .int-badge{background:rgba(236,72,153,.18);color:#f9a8d4;border:1px solid rgba(236,72,153,.3)}
+  .proj-badge{background:rgba(34,197,94,.18);color:#86efac;border:1px solid rgba(34,197,94,.3)}`;
+  document.head.appendChild(s);
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function resetForm(){
+  document.getElementById('actForm').reset();
+  document.getElementById('actId').value='';
+  document.getElementById('actPhotoPreview').style.display='none';
+  document.getElementById('actVideoPreview').style.display='none';
+  document.getElementById('removeActPhotoWrap').style.display='none';
+  document.getElementById('removeActVideoWrap').style.display='none';
+}
+
+function openAddModal(){resetForm();document.getElementById('actModalTitle').textContent='Add Activity';openModal('actModal')}
+
+async function editActivity(id){
+  try{
+    const a=await apiGet('/api/admin/activities/'+id);
+    resetForm();
+    document.getElementById('actId').value=a._id;
+    document.getElementById('act_title').value=a.title||'';
+    document.getElementById('act_desc').value=a.description||'';
+    document.getElementById('act_date').value=a.date||'';
+    document.getElementById('act_category').value=a.category||'';
+    document.getElementById('act_badge').value=a.badge||'';
+    document.getElementById('act_badge_class').value=a.badge_class||'';
+    document.getElementById('act_order').value=a.order||99;
+    document.getElementById('act_ext_link').value=a.ext_link||'';
+    document.getElementById('act_published').checked=!!a.published;
+    if(a.photo){
+      document.getElementById('actPhotoPreview').innerHTML=`<img src="${esc(a.photo)}" alt="photo"/>`;
+      document.getElementById('actPhotoPreview').style.display='flex';
+      document.getElementById('removeActPhotoWrap').style.display='flex';
+    }
+    if(a.video){
+      if(a.video.startsWith('/uploads/')){
+        document.getElementById('actVideoPreview').innerHTML=`<video src="${esc(a.video)}" controls style="max-width:100%;max-height:120px"></video>`;
+        document.getElementById('actVideoPreview').style.display='flex';
+      } else { document.getElementById('act_video_link').value=a.video; }
+      document.getElementById('removeActVideoWrap').style.display='flex';
+    }
+    document.getElementById('actModalTitle').textContent='Edit Activity';
+    openModal('actModal');
+  }catch(e){showToast(e.message,'error')}
+}
+
+async function saveActivity(){
+  const btn=document.getElementById('saveActBtn');
+  btn.disabled=true;btn.textContent='Saving…';
+  try{
+    const id=document.getElementById('actId').value;
+    const fd=new FormData(document.getElementById('actForm'));
+    fd.set('published',document.getElementById('act_published').checked?'true':'false');
+    if(document.getElementById('act_remove_photo')?.checked) fd.set('remove_photo','true');
+    if(document.getElementById('act_remove_video')?.checked) fd.set('remove_video','true');
+    const url=id?`/api/admin/activities/${id}`:'/api/admin/activities';
+    await apiPost(url,fd);
+    showToast(id?'Activity updated!':'Activity created!','success');
+    closeModal('actModal');
+    await loadActivities();
+  }catch(e){showToast(e.message,'error')}
+  finally{btn.disabled=false;btn.innerHTML='<i data-lucide="save" style="width:15px;height:15px"></i> Save Activity';if(typeof lucide!=='undefined')lucide.createIcons()}
+}
+
+async function togglePublish(id,current){
+  try{
+    await apiPublish(`/api/admin/activities/${id}/publish`,!current);
+    showToast(!current?'Activity published!':'Activity unpublished.','success');
+    await loadActivities();
+  }catch(e){showToast(e.message,'error')}
+}
+
+function deleteActivity(id,title){
+  showConfirm('Delete Activity',`Delete "${title}"? This cannot be undone.`,async()=>{
+    try{
+      await apiDelete(`/api/admin/activities/${id}`);
+      showToast('Activity deleted.','success');
+      await loadActivities();
+    }catch(e){showToast(e.message,'error')}
+  });
+}
+
+wireFilePreview('act_photo','actPhotoPreview');
+wireFilePreview('act_video','actVideoPreview');
+loadActivities();
+</script>
+{% endblock %}

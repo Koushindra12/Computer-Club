@@ -1,0 +1,85 @@
+{% extends "admin/base.html" %}
+{% block title %}Dashboard – Admin{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block breadcrumb %}Overview{% endblock %}
+
+{% block content %}
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-icon purple"><i data-lucide="calendar" style="width:22px;height:22px"></i></div>
+    <div>
+      <div class="stat-num">{{ stats.events }}</div>
+      <div class="stat-label">Total Events</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon cyan"><i data-lucide="layers" style="width:22px;height:22px"></i></div>
+    <div>
+      <div class="stat-num">{{ stats.activities }}</div>
+      <div class="stat-label">Activities</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon pink"><i data-lucide="trophy" style="width:22px;height:22px"></i></div>
+    <div>
+      <div class="stat-num">{{ stats.winners }}</div>
+      <div class="stat-label">Winners</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon green"><i data-lucide="image" style="width:22px;height:22px"></i></div>
+    <div>
+      <div class="stat-num">{{ stats.gallery }}</div>
+      <div class="stat-label">Gallery Items</div>
+    </div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:1rem">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i data-lucide="zap"></i> Quick Actions</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:.6rem">
+      <a href="/admin/events" class="btn btn-outline" style="justify-content:flex-start;border-radius:10px">
+        <i data-lucide="plus" style="width:15px;height:15px"></i> Add New Event
+      </a>
+      <a href="/admin/activities" class="btn btn-outline" style="justify-content:flex-start;border-radius:10px">
+        <i data-lucide="plus" style="width:15px;height:15px"></i> Add New Activity
+      </a>
+      <a href="/admin/winners" class="btn btn-outline" style="justify-content:flex-start;border-radius:10px">
+        <i data-lucide="plus" style="width:15px;height:15px"></i> Add Winner
+      </a>
+      <a href="/admin/gallery" class="btn btn-outline" style="justify-content:flex-start;border-radius:10px">
+        <i data-lucide="upload" style="width:15px;height:15px"></i> Upload to Gallery
+      </a>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i data-lucide="info"></i> System Info</div>
+    </div>
+    <div style="font-size:.8125rem;display:flex;flex-direction:column;gap:.6rem;color:var(--text-sec)">
+      <div style="display:flex;justify-content:space-between">
+        <span>Database</span><span style="color:var(--text-success,#86efac)">MongoDB ✓</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span>Media Storage</span><span style="color:#86efac">Local /uploads ✓</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span>Admin Session</span><span style="color:#86efac">Active ✓</span>
+      </div>
+      <div class="separator"></div>
+      <a href="/" target="_blank" class="btn btn-primary" style="justify-content:center">
+        <i data-lucide="external-link" style="width:14px;height:14px"></i> Open Public Website
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+if(typeof lucide!=='undefined') lucide.createIcons();
+</script>
+{% endblock %}

@@ -36,6 +36,7 @@
         <li role="none"><a href="gallery.html" class="nav-link" role="menuitem">Gallery</a></li>
         <li role="none"><a href="contact.html" class="nav-link" role="menuitem">Contact</a></li>
         <li role="none"><button onclick="openJoinModal()" class="btn btn-primary nav-cta" role="menuitem">Join Club</button></li>
+        <li role="none"><a href="/admin/login" class="nav-link nav-admin-link" role="menuitem" title="Admin Dashboard"><i data-lucide="shield" aria-hidden="true"></i> Admin</a></li>
       </ul>
       </div>    </div>
     <div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
@@ -56,121 +57,25 @@
         <h2 class="section-title" id="events-heading">Session Schedule</h2>
         <p class="section-desc">Each event is a hands-on, practical session designed to build web development skills progressively.</p>
       </div>
-      <div class="events-grid" data-animate="fade-up">
-
-        <div class="event-card">
-          <div class="event-card-accent" style="background:var(--c-html)"></div>
-          <div class="event-card-body">
-            <div class="event-card-top">
-              <span class="act-tech-badge html-badge">HTML</span>
-              <span class="timeline-status status-completed">Completed</span>
-            </div>
-            <h3>HTML – Basics & Basic Web Page Creation</h3>
-            <p>Develop foundational HTML skills and create a basic webpage with semantic elements, forms, and tables.</p>
-            <div class="event-card-footer">
-              <span><i data-lucide="calendar" aria-hidden="true"></i> 14 Sep 2026</span>
-              <span><i data-lucide="users" aria-hidden="true"></i> All Members</span>
-            </div>
-          </div>
+      <!-- Events are loaded dynamically from the Admin Dashboard -->
+      <div id="dynamic-events-grid" class="events-grid" data-animate="fade-up">
+        <div style="grid-column:1/-1;text-align:center;padding:2.5rem;color:var(--c-text-mute,#6b6b9a);font-size:.875rem">
+          <i data-lucide="loader" style="width:24px;height:24px;margin:0 auto .5rem;display:block;opacity:.5;animation:spin 1s linear infinite"></i>
+          Loading events…
         </div>
-
-        <div class="event-card">
-          <div class="event-card-accent" style="background:var(--c-css)"></div>
-          <div class="event-card-body">
-            <div class="event-card-top">
-              <span class="act-tech-badge css-badge">CSS</span>
-              <span class="timeline-status status-next">Up Next</span>
-            </div>
-            <h3>CSS – Web Page Design & Styling</h3>
-            <p>Apply CSS for attractive, structured, and user-friendly webpage design including flexbox, grid, and typography.</p>
-            <div class="event-card-footer">
-              <span><i data-lucide="calendar" aria-hidden="true"></i> 12 Oct 2026</span>
-              <span><i data-lucide="users" aria-hidden="true"></i> All Members</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="event-card">
-          <div class="event-card-accent" style="background:var(--c-js)"></div>
-          <div class="event-card-body">
-            <div class="event-card-top">
-              <span class="act-tech-badge js-badge">JS</span>
-              <span class="timeline-status status-upcoming">Upcoming</span>
-            </div>
-            <h3>JavaScript – Forms & Validation</h3>
-            <p>Develop interactive forms and implement basic JavaScript validation, DOM manipulation, and event handling.</p>
-            <div class="event-card-footer">
-              <span><i data-lucide="calendar" aria-hidden="true"></i> 09 Nov 2026</span>
-              <span><i data-lucide="users" aria-hidden="true"></i> All Members</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="event-card">
-          <div class="event-card-accent" style="background:var(--c-rwd)"></div>
-          <div class="event-card-body">
-            <div class="event-card-top">
-              <span class="act-tech-badge rwd-badge">RWD</span>
-              <span class="timeline-status status-upcoming">Upcoming</span>
-            </div>
-            <h3>Responsive Web Design</h3>
-            <p>Create webpages that work effectively on different screen sizes using media queries and mobile-first design.</p>
-            <div class="event-card-footer">
-              <span><i data-lucide="calendar" aria-hidden="true"></i> 30 Jan 2027</span>
-              <span><i data-lucide="users" aria-hidden="true"></i> All Members</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="event-card">
-          <div class="event-card-accent" style="background:var(--c-php)"></div>
-          <div class="event-card-body">
-            <div class="event-card-top">
-              <span class="act-tech-badge php-badge">PHP</span>
-              <span class="timeline-status status-upcoming">Upcoming</span>
-            </div>
-            <h3>PHP – Backend & Database Connectivity</h3>
-            <p>Develop server-side applications using PHP and connect webpages with MySQL databases for CRUD operations.</p>
-            <div class="event-card-footer">
-              <span><i data-lucide="calendar" aria-hidden="true"></i> 20 Feb 2027</span>
-              <span><i data-lucide="users" aria-hidden="true"></i> All Members</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="event-card">
-          <div class="event-card-accent" style="background:var(--c-int)"></div>
-          <div class="event-card-body">
-            <div class="event-card-top">
-              <span class="act-tech-badge int-badge">INT</span>
-              <span class="timeline-status status-upcoming">Upcoming</span>
-            </div>
-            <h3>Frontend–Backend Integration</h3>
-            <p>Connect HTML, CSS, JavaScript with PHP/Python backend and exchange data between frontend and server.</p>
-            <div class="event-card-footer">
-              <span><i data-lucide="calendar" aria-hidden="true"></i> 01 Mar 2027</span>
-              <span><i data-lucide="users" aria-hidden="true"></i> All Members</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="event-card">
-          <div class="event-card-accent" style="background:var(--c-proj)"></div>
-          <div class="event-card-body">
-            <div class="event-card-top">
-              <span class="act-tech-badge proj-badge">PROJECT</span>
-              <span class="timeline-status status-upcoming">Upcoming</span>
-            </div>
-            <h3>Mini Website Development & Presentation</h3>
-            <p>Develop, present, and evaluate a complete mini website as a capstone project with peer review and faculty evaluation.</p>
-            <div class="event-card-footer">
-              <span><i data-lucide="calendar" aria-hidden="true"></i> 05 Mar 2027</span>
-              <span><i data-lucide="users" aria-hidden="true"></i> All Members</span>
-            </div>
-          </div>
-        </div>
-
       </div>
+    </div>
+  </section>
+
+  <!-- Winners Section (shown only when there are published winners) -->
+  <section class="section" id="winners-section" aria-labelledby="winners-heading" style="display:none">
+    <div class="container">
+      <div class="section-header" data-animate="fade-up">
+        <span class="section-tag">Results</span>
+        <h2 class="section-title" id="winners-heading">Event Winners</h2>
+        <p class="section-desc">Congratulations to all the winners and participants who showcased their skills.</p>
+      </div>
+      <div id="dynamic-winners-grid" class="winners-grid" data-animate="fade-up"></div>
     </div>
   </section>
 
@@ -196,7 +101,7 @@
           <span>Department of Computer Science &amp; Engineering</span>
         </div>
       </div>    </div>
-    <div class="footer-bottom"><div class="container"><p>&copy; 2026 SUG Computer Club – Web Craft. All rights reserved.</p></div></div>
+    <div class="footer-bottom"><div class="container"><p>&copy; 2026 SUG Computer Club – Web Craft. All rights reserved.</p><a href="/admin/login" style="display:inline-flex;align-items:center;gap:.3rem;margin-left:1rem;color:rgba(255,255,255,.35);font-size:.75rem;text-decoration:none;transition:color .2s" title="Admin Login"><i data-lucide="shield" style="width:12px;height:12px"></i> Admin</a></div></div>
   </footer>
 
   <div class="modal-overlay" id="joinModal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
@@ -216,5 +121,6 @@
   </div>
 
   <script src="js/main.js"></script>
+  <script src="js/dynamic-content.js"></script>
 </body>
 </html>

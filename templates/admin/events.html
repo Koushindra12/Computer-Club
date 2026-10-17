@@ -1,0 +1,319 @@
+{% extends "admin/base.html" %}
+{% set active = "events" %}
+{% block title %}Events – Admin{% endblock %}
+{% block page_title %}Event Management{% endblock %}
+{% block breadcrumb %}Events{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-title"><i data-lucide="calendar"></i> All Events</div>
+    <button class="btn btn-primary" onclick="openAddModal()">
+      <i data-lucide="plus" style="width:15px;height:15px"></i> Add Event
+    </button>
+  </div>
+  <div id="eventsTableWrap">
+    <div class="loading-state"><i data-lucide="loader" style="width:20px;height:20px;animation:spin 1s linear infinite"></i> Loading…</div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="eventModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title"><i data-lucide="calendar"></i> <span id="eventModalTitle">Add Event</span></div>
+      <button class="modal-close-btn" onclick="closeModal('eventModal')"><i data-lucide="x" style="width:18px;height:18px"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="eventForm" enctype="multipart/form-data">
+        <input type="hidden" id="eventId" value=""/>
+        <div class="form-grid">
+          <div class="form-group form-full">
+            <label class="form-label">Event Title <span class="req">*</span></label>
+            <input type="text" id="ev_title" name="title" placeholder="e.g. Resume Building Workshop" required/>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Description <span class="req">*</span></label>
+            <textarea id="ev_desc" name="description" rows="3" placeholder="Describe the event…" required></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="text" id="ev_date" name="date" placeholder="e.g. 14 Sep 2026 or To Be Announced"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Time</label>
+            <input type="text" id="ev_time" name="time" placeholder="e.g. 10:00 AM or To Be Announced"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Venue</label>
+            <input type="text" id="ev_venue" name="venue" placeholder="e.g. Shobhit University Gangoh"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Registration Link</label>
+            <input type="text" id="ev_reg" name="reg_link" placeholder="URL or 'To Be Announced'"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select id="ev_status" name="status">
+              <option value="Upcoming">Upcoming</option>
+              <option value="Ongoing">Ongoing</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Badge Label</label>
+            <input type="text" id="ev_badge" name="badge" placeholder="e.g. HTML, WORKSHOP, PROJECT"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Badge Style</label>
+            <select id="ev_badge_class" name="badge_class">
+              <option value="">None</option>
+              <option value="html-badge">HTML (orange)</option>
+              <option value="css-badge">CSS (blue)</option>
+              <option value="js-badge">JS (yellow)</option>
+              <option value="rwd-badge">RWD (teal)</option>
+              <option value="php-badge">PHP (purple)</option>
+              <option value="int-badge">Integration (pink)</option>
+              <option value="proj-badge">Project (green)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Organizer</label>
+            <input type="text" id="ev_organizer" name="organizer" placeholder="e.g. Web Craft Club, Dr. Saini"/>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Eligibility</label>
+            <input type="text" id="ev_eligibility" name="eligibility" placeholder="e.g. Open to all BCA and B.Tech students"/>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Requirements / What to Bring</label>
+            <textarea id="ev_requirements" name="requirements" rows="2" placeholder="e.g. Laptop, resume draft, student ID…"></textarea>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Event Schedule (optional)</label>
+            <textarea id="ev_schedule" name="schedule" rows="3" placeholder="9:00 AM – Registration&#10;10:00 AM – Workshop begins&#10;1:00 PM – Lunch break…"></textarea>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Rules &amp; Instructions (optional)</label>
+            <textarea id="ev_rules" name="rules" rows="3" placeholder="1. Bring your own laptop&#10;2. Register before the deadline…"></textarea>
+          </div>
+
+          <div class="form-group form-full">
+            <label class="form-label">Poster / Cover Image</label>
+            <div id="posterPreview" class="media-preview" style="display:none;margin-bottom:.5rem"></div>
+            <div class="file-input-wrap">
+              <input type="file" id="ev_poster" name="poster" accept="image/*"/>
+              <div class="file-input-label"><i data-lucide="upload" style="width:15px;height:15px"></i> Choose image (PNG, JPG, WebP…)</div>
+            </div>
+            <label class="checkbox-wrap" style="margin-top:.5rem" id="removePosterWrap" style="display:none">
+              <input type="checkbox" id="ev_remove_poster" name="remove_poster" value="true"/>
+              <span>Remove existing poster</span>
+            </label>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Video (upload file)</label>
+            <div id="videoFilePreview" class="media-preview" style="display:none;margin-bottom:.5rem"></div>
+            <div class="file-input-wrap">
+              <input type="file" id="ev_video" name="video" accept="video/*"/>
+              <div class="file-input-label"><i data-lucide="film" style="width:15px;height:15px"></i> Choose video (MP4, WebM…)</div>
+            </div>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Or Video Link (YouTube / external URL)</label>
+            <input type="url" id="ev_video_link" name="video_link" placeholder="https://youtube.com/watch?v=…"/>
+            <label class="checkbox-wrap" style="margin-top:.5rem" id="removeVideoWrap" style="display:none">
+              <input type="checkbox" id="ev_remove_video" name="remove_video" value="true"/>
+              <span>Remove existing video</span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-wrap">
+              <input type="checkbox" id="ev_published" name="published" value="true"/>
+              <span>Publish immediately (visible to public)</span>
+            </label>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('eventModal')">Cancel</button>
+      <button class="btn btn-primary" id="saveEventBtn" onclick="saveEvent()">
+        <i data-lucide="save" style="width:15px;height:15px"></i> Save Event
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let allEvents=[];
+
+async function loadEvents(){
+  try{
+    allEvents=await apiGet('/api/admin/events');
+    renderTable();
+  }catch(e){
+    document.getElementById('eventsTableWrap').innerHTML=`<div class="empty-state"><i data-lucide="alert-circle"></i><p>${e.message}</p></div>`;
+    if(typeof lucide!=='undefined') lucide.createIcons();
+  }
+}
+
+function renderTable(){
+  if(!allEvents.length){
+    document.getElementById('eventsTableWrap').innerHTML=`<div class="empty-state"><i data-lucide="calendar"></i><p>No events yet. Click "Add Event" to create one.</p></div>`;
+    if(typeof lucide!=='undefined') lucide.createIcons();
+    return;
+  }
+  let rows=allEvents.map(ev=>`
+    <tr>
+      <td><div class="truncate" title="${esc(ev.title)}">${esc(ev.title)}</div></td>
+      <td>${ev.badge?`<span class="act-tech-badge ${esc(ev.badge_class||'proj-badge')}" style="font-size:.7rem;padding:.2rem .55rem">${esc(ev.badge)}</span>`:'-'}</td>
+      <td>${esc(ev.date||'-')}</td>
+      <td>${statusBadge(ev.status||'Upcoming')}</td>
+      <td>${pubBadge(ev.published)}</td>
+      <td>${ev.poster?`<img src="${esc(ev.poster)}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,.1)" alt="poster"/>`:'<span class="text-mute">—</span>'}</td>
+      <td>
+        <div class="td-actions">
+          <button class="btn btn-outline btn-sm btn-icon" onclick="editEvent('${ev._id}')" title="Edit"><i data-lucide="pencil" style="width:14px;height:14px"></i></button>
+          <button class="btn ${ev.published?'btn-warning':'btn-success'} btn-sm" onclick="togglePublish('${ev._id}',${ev.published})">${ev.published?'Unpublish':'Publish'}</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteEvent('${ev._id}','${esc(ev.title)}')" title="Delete"><i data-lucide="trash-2" style="width:14px;height:14px"></i></button>
+        </div>
+      </td>
+    </tr>`).join('');
+  document.getElementById('eventsTableWrap').innerHTML=`
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Title</th><th>Badge</th><th>Date</th><th>Status</th><th>Publication</th><th>Poster</th><th>Actions</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  // inject badge CSS if not present
+  if(!document.getElementById('badgeStyles')){
+    const s=document.createElement('style');s.id='badgeStyles';
+    s.textContent=`.act-tech-badge{display:inline-flex;align-items:center;font-weight:700;border-radius:6px;padding:.25rem .65rem;font-size:.7rem}
+    .html-badge{background:rgba(249,115,22,.18);color:#fb923c;border:1px solid rgba(249,115,22,.3)}
+    .css-badge{background:rgba(59,130,246,.18);color:#93c5fd;border:1px solid rgba(59,130,246,.3)}
+    .js-badge{background:rgba(234,179,8,.18);color:#fde047;border:1px solid rgba(234,179,8,.3)}
+    .rwd-badge{background:rgba(20,184,166,.18);color:#5eead4;border:1px solid rgba(20,184,166,.3)}
+    .php-badge{background:rgba(139,92,246,.18);color:#c4b5fd;border:1px solid rgba(139,92,246,.3)}
+    .int-badge{background:rgba(236,72,153,.18);color:#f9a8d4;border:1px solid rgba(236,72,153,.3)}
+    .proj-badge{background:rgba(34,197,94,.18);color:#86efac;border:1px solid rgba(34,197,94,.3)}`;
+    document.head.appendChild(s);
+  }
+  if(typeof lucide!=='undefined') lucide.createIcons();
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function resetForm(){
+  document.getElementById('eventForm').reset();
+  document.getElementById('eventId').value='';
+  document.getElementById('posterPreview').style.display='none';
+  document.getElementById('videoFilePreview').style.display='none';
+  document.getElementById('removePosterWrap').style.display='none';
+  document.getElementById('removeVideoWrap').style.display='none';
+}
+
+function openAddModal(){
+  resetForm();
+  document.getElementById('eventModalTitle').textContent='Add Event';
+  openModal('eventModal');
+}
+
+async function editEvent(id){
+  try{
+    const ev=await apiGet('/api/admin/events/'+id);
+    resetForm();
+    document.getElementById('eventId').value=ev._id;
+    document.getElementById('ev_title').value=ev.title||'';
+    document.getElementById('ev_desc').value=ev.description||'';
+    document.getElementById('ev_date').value=ev.date||'';
+    document.getElementById('ev_time').value=ev.time||'';
+    document.getElementById('ev_venue').value=ev.venue||'';
+    document.getElementById('ev_reg').value=ev.reg_link||'';
+    document.getElementById('ev_status').value=ev.status||'Upcoming';
+    document.getElementById('ev_badge').value=ev.badge||'';
+    document.getElementById('ev_badge_class').value=ev.badge_class||'';
+    document.getElementById('ev_organizer').value=ev.organizer||'';
+    document.getElementById('ev_eligibility').value=ev.eligibility||'';
+    document.getElementById('ev_requirements').value=ev.requirements||'';
+    document.getElementById('ev_schedule').value=ev.schedule||'';
+    document.getElementById('ev_rules').value=ev.rules||'';
+    document.getElementById('ev_published').checked=!!ev.published;
+    // Show poster preview
+    if(ev.poster){
+      document.getElementById('posterPreview').innerHTML=`<img src="${esc(ev.poster)}" alt="poster"/>`;
+      document.getElementById('posterPreview').style.display='flex';
+      document.getElementById('removePosterWrap').style.display='flex';
+    }
+    // Show video
+    if(ev.video){
+      if(ev.video.startsWith('/uploads/')){
+        document.getElementById('videoFilePreview').innerHTML=`<video src="${esc(ev.video)}" controls style="max-width:100%;max-height:120px"></video>`;
+        document.getElementById('videoFilePreview').style.display='flex';
+        document.getElementById('removeVideoWrap').style.display='flex';
+      } else {
+        document.getElementById('ev_video_link').value=ev.video;
+        document.getElementById('removeVideoWrap').style.display='flex';
+      }
+    }
+    document.getElementById('eventModalTitle').textContent='Edit Event';
+    openModal('eventModal');
+  }catch(e){ showToast(e.message,'error'); }
+}
+
+async function saveEvent(){
+  const btn=document.getElementById('saveEventBtn');
+  btn.disabled=true;btn.textContent='Saving…';
+  try{
+    const id=document.getElementById('eventId').value;
+    const fd=new FormData(document.getElementById('eventForm'));
+    fd.set('published', document.getElementById('ev_published').checked?'true':'false');
+    if(document.getElementById('ev_remove_poster')?.checked) fd.set('remove_poster','true');
+    if(document.getElementById('ev_remove_video')?.checked) fd.set('remove_video','true');
+    const url=id?`/api/admin/events/${id}`:'/api/admin/events';
+    await apiPost(url,fd);
+    showToast(id?'Event updated!':'Event created!','success');
+    closeModal('eventModal');
+    await loadEvents();
+  }catch(e){ showToast(e.message,'error'); }
+  finally{ btn.disabled=false;btn.innerHTML='<i data-lucide="save" style="width:15px;height:15px"></i> Save Event';if(typeof lucide!=='undefined')lucide.createIcons(); }
+}
+
+async function togglePublish(id,current){
+  try{
+    await apiPublish(`/api/admin/events/${id}/publish`,!current);
+    showToast(!current?'Event published!':'Event unpublished.','success');
+    await loadEvents();
+  }catch(e){ showToast(e.message,'error'); }
+}
+
+function deleteEvent(id,title){
+  showConfirm(
+    'Delete Event',
+    `Delete "${title}"? This will also remove all associated winner records. This cannot be undone.`,
+    async()=>{
+      try{
+        await apiDelete(`/api/admin/events/${id}?force=true`);
+        showToast('Event deleted.','success');
+        await loadEvents();
+      }catch(e){ showToast(e.message,'error'); }
+    }
+  );
+}
+
+// File previews
+wireFilePreview('ev_poster','posterPreview');
+wireFilePreview('ev_video','videoFilePreview');
+
+loadEvents();
+</script>
+{% endblock %}

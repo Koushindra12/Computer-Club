@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Not Found – SUG Computer Club Web Craft</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/responsive.css" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+  <nav class="navbar scrolled" role="navigation" aria-label="Main navigation">
+    <div class="container nav-container">
+      <a href="/" class="nav-logo">
+        <img src="/assets/logo/logo.png" alt="SUG Computer Club" class="logo-uni-img" width="42" height="42" />
+        <div class="logo-text"><span class="logo-main">SUG Computer Club</span><span class="logo-sub">Web Craft</span></div>
+      </a>
+    </div>
+  </nav>
+
+  <section style="min-height:80vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:4rem 1rem">
+    <div>
+      <div style="font-size:5rem;margin-bottom:1rem">🔍</div>
+      <h1 style="font-size:2rem;font-weight:800;color:#fff;margin-bottom:.75rem">Page Not Found</h1>
+      <p style="color:rgba(255,255,255,.6);font-size:1rem;max-width:420px;margin:0 auto 2rem;line-height:1.6">
+        {{ message or 'The page you are looking for does not exist or has been removed.' }}
+      </p>
+      <a href="{{ back_url or '/' }}"
+         style="display:inline-flex;align-items:center;gap:.5rem;padding:.75rem 2rem;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:999px;color:#fff;font-weight:600;text-decoration:none;font-size:.9rem">
+        <i data-lucide="arrow-left" style="width:16px;height:16px"></i>
+        {{ back_label or 'Go Back' }}
+      </a>
+    </div>
+  </section>
+
+  <script>lucide.createIcons();</script>
+</body>
+</html>

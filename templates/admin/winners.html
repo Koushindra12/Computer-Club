@@ -1,0 +1,269 @@
+{% extends "admin/base.html" %}
+{% set active = "winners" %}
+{% block title %}Winners – Admin{% endblock %}
+{% block page_title %}Winners Management{% endblock %}
+{% block breadcrumb %}Winners{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-title"><i data-lucide="trophy"></i> Event Winners</div>
+    <button class="btn btn-primary" onclick="openAddModal()">
+      <i data-lucide="plus" style="width:15px;height:15px"></i> Add Winner
+    </button>
+  </div>
+
+  <!-- Filter by event -->
+  <div style="margin-bottom:1.25rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+    <label class="form-label" style="margin:0;flex-shrink:0">Filter by Event:</label>
+    <select id="filterEventSelect" style="max-width:320px" onchange="loadWinners()">
+      <option value="">All Events</option>
+      {% for ev in events %}
+      <option value="{{ ev._id }}">{{ ev.title }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div id="winnersTableWrap">
+    <div class="loading-state"><i data-lucide="loader" style="width:20px;height:20px;animation:spin 1s linear infinite"></i> Loading…</div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="winnerModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title"><i data-lucide="trophy"></i> <span id="winnerModalTitle">Add Winner</span></div>
+      <button class="modal-close-btn" onclick="closeModal('winnerModal')"><i data-lucide="x" style="width:18px;height:18px"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="winnerForm" enctype="multipart/form-data">
+        <input type="hidden" id="winnerId" value=""/>
+        <div class="form-grid">
+          <div class="form-group form-full">
+            <label class="form-label">Associated Event <span class="req">*</span></label>
+            <select id="win_event" name="event_id" required>
+              <option value="">Select an event…</option>
+              {% for ev in events %}
+              <option value="{{ ev._id }}">{{ ev.title }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Winner Name <span class="req">*</span></label>
+            <input type="text" id="win_name" name="name" placeholder="Full name" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Position</label>
+            <select id="win_position" name="position">
+              <option value="1">1st Place</option>
+              <option value="2">2nd Place</option>
+              <option value="3">3rd Place</option>
+              <option value="4">Runner-Up / Honourable Mention</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Department</label>
+            <input type="text" id="win_dept" name="department" placeholder="e.g. CSE, BCA"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Academic Year</label>
+            <input type="text" id="win_year" name="year" placeholder="e.g. 2nd Year"/>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Achievement Description</label>
+            <textarea id="win_achievement" name="achievement" rows="2" placeholder="What did they achieve?"></textarea>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Project / Work Link (optional)</label>
+            <input type="url" id="win_project" name="project_link" placeholder="https://…"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Project Title</label>
+            <input type="text" id="win_project_title" name="project_title" placeholder="e.g. Portfolio Website"/>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Project Description</label>
+            <textarea id="win_project_desc" name="project_desc" rows="2" placeholder="Brief description of the project…"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Prize Amount</label>
+            <input type="text" id="win_prize_amount" name="prize_amount" placeholder="e.g. ₹2000, Gift Voucher"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Prize Description</label>
+            <input type="text" id="win_prize_desc" name="prize_desc" placeholder="e.g. Cash prize + certificate"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Team Name</label>
+            <input type="text" id="win_team_name" name="team_name" placeholder="e.g. Code Avengers"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Teammates</label>
+            <input type="text" id="win_teammates" name="teammates" placeholder="Comma-separated names"/>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Certificate URL (if digital)</label>
+            <input type="url" id="win_certificate_url" name="certificate_url" placeholder="https://…"/>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Winner Photograph</label>
+            <div id="winPhotoPreview" class="media-preview" style="display:none;margin-bottom:.5rem"></div>
+            <div class="file-input-wrap">
+              <input type="file" id="win_photo" name="photo" accept="image/*"/>
+              <div class="file-input-label"><i data-lucide="user" style="width:15px;height:15px"></i> Choose photo</div>
+            </div>
+            <label class="checkbox-wrap" style="margin-top:.5rem" id="removeWinPhotoWrap" style="display:none">
+              <input type="checkbox" id="win_remove_photo" name="remove_photo" value="true"/>
+              <span>Remove existing photo</span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-wrap">
+              <input type="checkbox" id="win_published" name="published" value="true"/>
+              <span>Publish immediately</span>
+            </label>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('winnerModal')">Cancel</button>
+      <button class="btn btn-primary" id="saveWinBtn" onclick="saveWinner()">
+        <i data-lucide="save" style="width:15px;height:15px"></i> Save Winner
+      </button>
+    </div>
+  </div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const posLabels={1:'🥇 1st',2:'🥈 2nd',3:'🥉 3rd',4:'Runner-Up'};
+let allWinners=[];
+
+async function loadWinners(){
+  const ev=document.getElementById('filterEventSelect').value;
+  const url=ev?`/api/admin/winners?event_id=${ev}`:'/api/admin/winners';
+  try{
+    allWinners=await apiGet(url);
+    renderTable();
+  }catch(e){
+    document.getElementById('winnersTableWrap').innerHTML=`<div class="empty-state"><p>${e.message}</p></div>`;
+  }
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function renderTable(){
+  if(!allWinners.length){
+    document.getElementById('winnersTableWrap').innerHTML=`<div class="empty-state"><i data-lucide="trophy"></i><p>No winners yet. Click "Add Winner" to start.</p></div>`;
+    if(typeof lucide!=='undefined') lucide.createIcons();return;
+  }
+  let rows=allWinners.map(w=>`
+    <tr>
+      <td>${esc(posLabels[w.position]||'Other')}</td>
+      <td>${w.photo?`<img src="${esc(w.photo)}" style="width:36px;height:36px;object-fit:cover;border-radius:50%;border:2px solid rgba(255,255,255,.15)" alt="photo"/>`:'<span class="text-mute">—</span>'}</td>
+      <td><strong>${esc(w.name)}</strong></td>
+      <td>${esc(w.department||'-')} ${w.year?`<span class="text-mute">(${esc(w.year)})</span>`:''}</td>
+      <td><div class="truncate">${esc(w.achievement||'-')}</div></td>
+      <td>${pubBadge(w.published)}</td>
+      <td>
+        <div class="td-actions">
+          <button class="btn btn-outline btn-sm btn-icon" onclick="editWinner('${w._id}')" title="Edit"><i data-lucide="pencil" style="width:14px;height:14px"></i></button>
+          <button class="btn ${w.published?'btn-warning':'btn-success'} btn-sm" onclick="togglePublish('${w._id}',${w.published})">${w.published?'Unpublish':'Publish'}</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteWinner('${w._id}','${esc(w.name)}')" title="Delete"><i data-lucide="trash-2" style="width:14px;height:14px"></i></button>
+        </div>
+      </td>
+    </tr>`).join('');
+  document.getElementById('winnersTableWrap').innerHTML=`
+    <div class="table-wrap"><table>
+      <thead><tr><th>Position</th><th>Photo</th><th>Name</th><th>Dept / Year</th><th>Achievement</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+  if(typeof lucide!=='undefined') lucide.createIcons();
+}
+
+function resetForm(){
+  document.getElementById('winnerForm').reset();
+  document.getElementById('winnerId').value='';
+  document.getElementById('winPhotoPreview').style.display='none';
+  document.getElementById('removeWinPhotoWrap').style.display='none';
+}
+
+function openAddModal(){
+  resetForm();
+  document.getElementById('winnerModalTitle').textContent='Add Winner';
+  openModal('winnerModal');
+}
+
+async function editWinner(id){
+  try{
+    const w=await apiGet('/api/admin/winners/'+id);
+    resetForm();
+    document.getElementById('winnerId').value=w._id;
+    document.getElementById('win_event').value=w.event_id||'';
+    document.getElementById('win_name').value=w.name||'';
+    document.getElementById('win_position').value=String(w.position||1);
+    document.getElementById('win_dept').value=w.department||'';
+    document.getElementById('win_year').value=w.year||'';
+    document.getElementById('win_achievement').value=w.achievement||'';
+    document.getElementById('win_project').value=w.project_link||'';
+    document.getElementById('win_project_title').value=w.project_title||'';
+    document.getElementById('win_project_desc').value=w.project_desc||'';
+    document.getElementById('win_prize_amount').value=w.prize_amount||'';
+    document.getElementById('win_prize_desc').value=w.prize_desc||'';
+    document.getElementById('win_team_name').value=w.team_name||'';
+    document.getElementById('win_teammates').value=w.teammates||'';
+    document.getElementById('win_certificate_url').value=w.certificate_url||'';
+    document.getElementById('win_published').checked=!!w.published;
+    if(w.photo){
+      document.getElementById('winPhotoPreview').innerHTML=`<img src="${esc(w.photo)}" style="max-height:120px;object-fit:cover;border-radius:8px" alt="photo"/>`;
+      document.getElementById('winPhotoPreview').style.display='flex';
+      document.getElementById('removeWinPhotoWrap').style.display='flex';
+    }
+    document.getElementById('winnerModalTitle').textContent='Edit Winner';
+    openModal('winnerModal');
+  }catch(e){showToast(e.message,'error')}
+}
+
+async function saveWinner(){
+  const btn=document.getElementById('saveWinBtn');
+  btn.disabled=true;btn.textContent='Saving…';
+  try{
+    const id=document.getElementById('winnerId').value;
+    const fd=new FormData(document.getElementById('winnerForm'));
+    fd.set('published',document.getElementById('win_published').checked?'true':'false');
+    if(document.getElementById('win_remove_photo')?.checked) fd.set('remove_photo','true');
+    const url=id?`/api/admin/winners/${id}`:'/api/admin/winners';
+    await apiPost(url,fd);
+    showToast(id?'Winner updated!':'Winner added!','success');
+    closeModal('winnerModal');
+    await loadWinners();
+  }catch(e){showToast(e.message,'error')}
+  finally{btn.disabled=false;btn.innerHTML='<i data-lucide="save" style="width:15px;height:15px"></i> Save Winner';if(typeof lucide!=='undefined')lucide.createIcons()}
+}
+
+async function togglePublish(id,current){
+  try{
+    await apiPublish(`/api/admin/winners/${id}/publish`,!current);
+    showToast(!current?'Published!':'Unpublished.','success');
+    await loadWinners();
+  }catch(e){showToast(e.message,'error')}
+}
+
+function deleteWinner(id,name){
+  showConfirm('Delete Winner',`Remove "${name}" from the winners list? This cannot be undone.`,async()=>{
+    try{
+      await apiDelete(`/api/admin/winners/${id}`);
+      showToast('Winner deleted.','success');
+      await loadWinners();
+    }catch(e){showToast(e.message,'error')}
+  });
+}
+
+wireFilePreview('win_photo','winPhotoPreview');
+loadWinners();
+</script>
+{% endblock %}
