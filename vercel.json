@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/uploads/(.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/admin(.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/event/(.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/winner/(.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|webp|svg|mp4|webm|pdf|ico|woff|woff2|ttf))",
+      "dest": "/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.py"
+    }
+  ]
+}

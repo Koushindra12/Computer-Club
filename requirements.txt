@@ -4,3 +4,4 @@ Flask-PyMongo==2.3.0
 pymongo>=4.0
 python-dotenv==1.0.1
 Pillow>=10.0
+cloudinary>=1.36.0

@@ -205,9 +205,10 @@ async function doUpload(){
 // ── Library ──
 async function loadMedia(){
   const t = document.getElementById('filterType')?.value || '';
-  const url = t?`/api/admin/media?media_type=${t}`:'/api/admin/media';
   try{
-    const items = await apiGet(url);
+    // Fetch all items; filter client-side by media_type (API does not support ?media_type param)
+    const allItems = await apiGet('/api/admin/media');
+    const items = t ? allItems.filter(m => m.media_type === t) : allItems;
     renderLibrary(items);
   }catch(e){
     document.getElementById('mediaLibrary').innerHTML=`<div class="empty-state"><p>${e.message}</p></div>`;

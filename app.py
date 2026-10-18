@@ -26,6 +26,22 @@ from pymongo import MongoClient
 from bson import ObjectId
 from bson.errors import InvalidId
 
+# ── Optional: Cloudinary persistent storage (required for Vercel) ───────────────
+# Set CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name in Vercel env vars.
+# Without it, files are stored locally (fine for local dev; lost on Vercel restarts).
+try:
+    import cloudinary
+    import cloudinary.uploader
+    import cloudinary.api
+    _CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL', '')
+    if _CLOUDINARY_URL:
+        cloudinary.config(cloudinary_url=_CLOUDINARY_URL)
+        _USE_CLOUDINARY = True
+    else:
+        _USE_CLOUDINARY = False
+except ImportError:
+    _USE_CLOUDINARY = False
+
 # ── App setup ─────────────────────────────────────────────────────────────────
 app = Flask(
     __name__,
@@ -84,9 +100,16 @@ col_admins     = db['admins']
 col_media      = db['media']   # individual media items (multi-upload)
 
 # ── Upload config ──────────────────────────────────────────────────────────────
-UPLOAD_FOLDER = Path(os.environ.get('UPLOAD_FOLDER', 'uploads'))
+# Use env var if set; fall back to 'uploads' locally.
+# On Vercel (read-only fs except /tmp), override to /tmp/uploads automatically.
+_upload_folder_env = os.environ.get('UPLOAD_FOLDER', 'uploads')
+_is_vercel = os.environ.get('VERCEL') == '1' or os.environ.get('VERCEL_ENV') is not None
 
-UPLOAD_FOLDER = Path("/tmp/uploads")
+if _is_vercel:
+    UPLOAD_FOLDER = Path('/tmp/uploads')
+else:
+    UPLOAD_FOLDER = Path(_upload_folder_env)
+
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 for sub in ('events', 'activities', 'winners', 'gallery', 'media'):
     (UPLOAD_FOLDER / sub).mkdir(exist_ok=True)
@@ -102,15 +125,32 @@ def allowed_file(filename, allowed=ALLOWED_ALL):
     return _ext(filename) in allowed
 
 def save_upload(file, subfolder, allowed=ALLOWED_ALL):
-    """Save one uploaded file. Returns relative URL or None."""
+    """Save one uploaded file. Returns absolute URL (Cloudinary) or relative URL (local), or None."""
     if not file or file.filename == '':
         return None
     if not allowed_file(file.filename, allowed):
         return None
     ext = _ext(file.filename)
     name = f"{uuid.uuid4().hex}.{ext}"
-    file.save(str(UPLOAD_FOLDER / subfolder / name))
-    return f"/uploads/{subfolder}/{name}"
+
+    if _USE_CLOUDINARY:
+        # Upload to Cloudinary for persistent storage (required on Vercel)
+        try:
+            resource_type = 'video' if ext in ALLOWED_VID else 'image' if ext in ALLOWED_IMG else 'raw'
+            result = cloudinary.uploader.upload(
+                file,
+                public_id=f"computerclub/{subfolder}/{name.rsplit('.', 1)[0]}",
+                resource_type=resource_type,
+                overwrite=False,
+            )
+            return result.get('secure_url')
+        except Exception as e:
+            app.logger.error(f'Cloudinary upload failed: {e}')
+            return None
+    else:
+        # Local filesystem storage
+        file.save(str(UPLOAD_FOLDER / subfolder / name))
+        return f"/uploads/{subfolder}/{name}"
 
 def save_uploads(files, subfolder, allowed=ALLOWED_ALL):
     """Save multiple uploaded files. Returns list of URL paths."""
@@ -122,9 +162,30 @@ def save_uploads(files, subfolder, allowed=ALLOWED_ALL):
     return urls
 
 def delete_upload_file(url_path):
-    if not url_path or not url_path.startswith('/uploads/'):
+    if not url_path:
         return
-    abs_path = Path(url_path.lstrip('/'))
+    if _USE_CLOUDINARY and url_path.startswith('https://res.cloudinary.com/'):
+        # Extract public_id from Cloudinary URL and delete
+        try:
+            # Cloudinary URL format: https://res.cloudinary.com/<cloud>/image/upload/v<ver>/<public_id>.<ext>
+            parts = url_path.split('/upload/', 1)
+            if len(parts) == 2:
+                public_id_with_ext = parts[1].split('/', 1)[-1] if parts[1].startswith('v') else parts[1]
+                # Remove version prefix like v1234567890/
+                if '/' in public_id_with_ext:
+                    public_id_with_ext = public_id_with_ext.split('/', 1)[1]
+                # Remove extension
+                public_id = public_id_with_ext.rsplit('.', 1)[0]
+                cloudinary.uploader.destroy(public_id)
+        except Exception:
+            pass
+        return
+    if not url_path.startswith('/uploads/'):
+        return
+    # Resolve against UPLOAD_FOLDER, not CWD.
+    # url_path is like /uploads/events/abc.jpg -> strip /uploads/ prefix
+    relative = url_path[len('/uploads/'):]
+    abs_path = UPLOAD_FOLDER / relative
     if abs_path.exists():
         try:
             abs_path.unlink()
@@ -144,7 +205,12 @@ def _count_references(url_path):
 
 def safe_delete_file(url_path, exclude_col=None, exclude_id=None):
     """Delete file only if no other record references it."""
-    if not url_path or not url_path.startswith('/uploads/'):
+    if not url_path:
+        return
+    # Allow local /uploads/ paths AND Cloudinary https:// URLs through.
+    is_local = url_path.startswith('/uploads/')
+    is_cloudinary = url_path.startswith('https://res.cloudinary.com/')
+    if not is_local and not is_cloudinary:
         return
     q = {'$or': [{'poster': url_path}, {'video': url_path}, {'photo': url_path},
                  {'media_url': url_path}]}
@@ -959,7 +1025,12 @@ def api_admin_media_upload():
     parent_id   = request.form.get('parent_id', '')
     caption     = request.form.get('caption', '')
     published   = request.form.get('published') == 'true'
-    subfolder   = parent_type if parent_type in ('events', 'activities', 'winners', 'gallery') else 'media'
+    # Map singular parent_type values to plural subfolder names.
+    # 'event' -> 'events', 'activity' -> 'activities', 'general' -> 'media'
+    _subfolder_map = {'event': 'events', 'activity': 'activities',
+                      'events': 'events', 'activities': 'activities',
+                      'winners': 'winners', 'gallery': 'gallery'}
+    subfolder = _subfolder_map.get(parent_type, 'media')
 
     files = request.files.getlist('files')
     if not files:
