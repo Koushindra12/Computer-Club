@@ -43,6 +43,11 @@ except ImportError:
     _USE_CLOUDINARY = False
 
 # ── App setup ─────────────────────────────────────────────────────────────────
+# APP_ROOT is the absolute path to the directory containing app.py.
+# Used instead of '.' in send_from_directory to be safe on Vercel where
+# the process CWD at invocation time may differ from the project root.
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+
 app = Flask(
     __name__,
     template_folder='templates',
@@ -262,13 +267,13 @@ def serve_upload(filename):
 @app.route('/')
 @app.route('/index.html')
 def serve_index():
-    return send_from_directory('.', 'index.html')
+    return send_from_directory(APP_ROOT, 'index.html')
 
 for _p in ('about', 'activities', 'contact', 'events', 'gallery', 'members'):
     def _mk(p):
         @app.route(f'/{p}.html', endpoint=f'page_{p}')
         def _r():
-            return send_from_directory('.', f'{p}.html')
+            return send_from_directory(APP_ROOT, f'{p}.html')
     _mk(_p)
 
 # ── Key-generation helper endpoint (call once, store result in .env) ──────────
